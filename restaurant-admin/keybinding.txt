@@ -1,0 +1,34 @@
+focus on search bar = Alt + f
+focus on sales form =  Alt + c
+close modal (Alert & Notification) = ESC
+Create Data on Form (Products, Sales, ...) = ENTER
+
+Select Product Item on Table = Tab
+
+Delete Products & Category  = Ctrl + Del
+
+Clear form = Alt + Del
+
+Reload Data from Server : F5
+
+Print Sales Voucher  = Ctrl + ENTER or Alt + Enter  
+
+
+SWITCH BETWEEN Tab = Ctrl + Tab
+
+
+Product View------------------------------------------
+Alt + P = Create new Product
+Alt + C = Create new Category
+Alt + E = Excel Import/Export
+Alt + R = Change Price
+Alt + F = Search Products 
+
+Sales View---------------------------------------------------------
+
+Ctrl + 1 = Sales 1
+Ctrl + 2 = Sales 2 
+....etc 
+
+
+
