@@ -20,6 +20,7 @@ import Inventory from "../components/Inventory/Inventory";
 import Food from "../components/Food/Food"
 import Table from "../components/Table/Table";
 import Notification from "../components/Notification/Notification";
+import Account from "../components/Account/Account";
 
 const Routes = () => {
   const { token } = useAuth();
@@ -50,6 +51,10 @@ const Routes = () => {
     {
       path : '/notification',
       element : <Notification/>
+    },
+    {
+      path : '/accounts',
+      element : <Account/>
     },
     {
       path: '/products',

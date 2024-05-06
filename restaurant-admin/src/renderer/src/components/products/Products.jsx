@@ -370,6 +370,7 @@ const Products = () => {
     const handleKeyDown = (e) => {
       if (e.key === 'F5') {
         product_data.refetch()
+        kitchen_data.refetch()
       }
     }
 
@@ -378,7 +379,11 @@ const Products = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [product_data])
+  }, [product_data, kitchen_data])
+
+  useEffect(()=>{
+    kitchen_data.refetch();
+  },[])
 
   return (
     <div className="flex flex-col h-screen">

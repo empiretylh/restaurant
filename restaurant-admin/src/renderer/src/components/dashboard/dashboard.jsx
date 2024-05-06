@@ -25,12 +25,13 @@ const Dashboard = () => {
         <div className='w-screen h-screen bg-gray-300'>
            <TopBar/>
            
+
            <div className="w-full p-16 grid grid-cols-5 gap-5">
               <CardBtn name='Inventory' image={IMAGE.inventory} nav={"/products"}/>
               <CardBtn name='Kitchen' image={IMAGE.chef} nav={"/kitchen"}/>
               <CardBtn name='Food' image={IMAGE.food} nav={"/food"}/>
               <CardBtn name='Table' image={IMAGE.table} nav={"/table"}/>
-                <CardBtn name='Waiters' image={IMAGE.waiter} nav={"/waiters"}/>
+                <CardBtn name='Accounts' image={IMAGE.account} nav={"/accounts"}/>
                 <CardBtn name='Menu' image={IMAGE.loading} nav={"/menu"}/>
 
                 <CardBtn name='Orders' image={IMAGE.loading} nav={"/orders"}/>

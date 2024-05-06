@@ -3,6 +3,7 @@ import { IMAGE } from '../../config/image'
 import CustomModal from '../custom_components/CustomModal';
 import { useMutation, useQuery } from 'react-query';
 import { createKitchen, getKitchen } from '../../server/api';
+import Bar from '../TopBar/Bar';
 
 const Notification = () => {
 
@@ -38,6 +39,7 @@ const Notification = () => {
 
 	return (
 		< div className="w-screen h-screen bg-gray-300 flex flex-col items-center " >
+			<Bar/>
 			<h1>Notification</h1>
 			<div className="w-1/2 h-1/2 bg-white rounded-lg shadow-md p-3 flex flex-col items-center">
 				<h1>Send Notification</h1>

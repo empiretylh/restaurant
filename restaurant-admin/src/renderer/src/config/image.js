@@ -9,6 +9,9 @@ import Floor from '../assets/icon/floor.png';
 import TableActive from '../assets/icon/table_active.png';
 import TableInactive from '../assets/icon/table_noactive.png';
 import Waiter from '../assets/icon/waiter.png'
+import Accounts from '../assets/icon/account.png';
+import Admin from '../assets/icon/admin.png';
+import Cashier from '../assets/icon/cashier.png';
 
 export const IMAGE = {
     app_icon: appicon,
@@ -21,5 +24,9 @@ export const IMAGE = {
     table: Table,
     table_active: TableActive,
     table_inactive: TableInactive,
-    waiter: Waiter
+    waiter: Waiter,
+    account:Accounts,
+    admin:Admin,
+    cashier:Cashier,
+
 }

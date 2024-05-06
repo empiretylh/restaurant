@@ -22,6 +22,7 @@ const Table = () => {
 	const [showEditTable, setShowEditTable] = useState(false);
 	const [searchText, setSearchText] = useState('');
 
+
 	const postFloor = useMutation(createFloor, {
 		onMutate: () => {
 			setLoading(true);
@@ -136,7 +137,7 @@ const Table = () => {
 						<label className="text-lg">Table Name</label>
 						<input type="text" className="p-2 border border-gray-300 rounded-lg" required placeholder="Eg. Main Hall" />
 						<label className="text-lg">Floor</label>
-						<select className="p-2 border border-gray-300 rounded-lg" required value={selectedFloor || floors[0].id}>
+						<select className="p-2 border border-gray-300 rounded-lg" required value={selectedFloor || floors[0]?.id}>
 							{floors?.map(item => <option value={item.id}>{item.name}</option>)}
 						</select>
 
@@ -158,7 +159,7 @@ const Table = () => {
 					}}>
 						<label className="text-lg">Total Table</label>
 						<input type="number" className="p-2 border border-gray-300 rounded-lg" required />
-						<select className="p-2 border border-gray-300 rounded-lg" required value={selectedFloor || floors[0].id}	>
+						<select className="p-2 border border-gray-300 rounded-lg" required value={selectedFloor || floors[0]?.id}	>
 							{floors?.map(item => <option value={item.id}>{item.name}</option>)}
 						</select>
 						<button className="bg-primary text-white p-2 rounded-lg hover:bg-blue-600">Generate Table</button>
@@ -193,7 +194,7 @@ const Table = () => {
 						setEditTableData({ ...editTableData, name: e.target.value })
 					}} type="text" value={editTableData?.name} className="p-2 border border-gray-300 rounded-lg" required placeholder="Eg. Main Hall" />
 					<label className="text-lg">Floor</label>
-					<select className="p-2 border border-gray-300 rounded-lg" required value={selectedFloor || floors[0].id}>
+					<select className="p-2 border border-gray-300 rounded-lg" required value={selectedFloor || floors[0]?.id}>
 						{floors?.map(item => <option value={item.id}>{item.name}</option>)}
 					</select>
 

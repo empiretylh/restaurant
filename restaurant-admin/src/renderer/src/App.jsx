@@ -22,6 +22,7 @@ import KitchenDataProvider from './context/KitchenDataProvider'
 import FoodDataProvider from './context/FoodDataProvider'
 import FloorsDataProvider from './context/FloorDataProvider'
 import FloorDataProvider from './context/FloorDataProvider'
+import AccountsDataProvider from './context/AccountsContextProvider'
 
 axios.defaults.baseURL = localStorage.getItem('domain') || domainURL
 
@@ -41,6 +42,8 @@ function App() {
                     {/* <SupplierDataProvider> */}
                     <ProductsDataProvider>
                       <FoodDataProvider>
+                        <AccountsDataProvider>
+
                         {/*   <ExpenseDataProvider> */}
                         {/*     <OtherIncomeDataProvider> */}
                         {/*       <CustomerDataProvider> */}
@@ -52,6 +55,8 @@ function App() {
                         {/*       </CustomerDataProvider> */}
                         {/*     </OtherIncomeDataProvider> */}
                         {/*   </ExpenseDataProvider> */}
+                        </AccountsDataProvider>
+                        
                       </FoodDataProvider>
                     </ProductsDataProvider>
                     {/* </SupplierDataProvider> */}

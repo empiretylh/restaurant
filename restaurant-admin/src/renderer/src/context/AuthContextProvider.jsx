@@ -122,7 +122,8 @@ const AuthProvider = ({ children }) => {
       LOGOUT,
       user_data,
       profiledata,
-      isplan
+      isplan,
+    
     }),
     [token, profiledata, user_data, isplan]
   )

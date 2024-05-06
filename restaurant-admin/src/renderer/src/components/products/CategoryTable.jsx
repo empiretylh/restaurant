@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import numberWithCommas from '../custom_components/NumberWithCommas';
 import { useTranslation } from 'react-i18next';
-import { IDToCategory } from '../../context/CategoryDataProvider';
+import { IDToCategory, useCategoryData } from '../../context/CategoryDataProvider';
 import { countProducts } from '../../context/ProductsDataProvider';
+import { useMutation } from 'react-query'
+import { putCategorys } from '../../server/api';
 
 const generateRandomData = (numItems) => {
     const data = [];
@@ -17,6 +19,14 @@ const generateRandomData = (numItems) => {
 
 const CategoryTable = ({ data, searchtext = '', sortby = 'name', selectedRow, setSelectedRow, rowDoubleClick }) => {
     const { t } = useTranslation();
+
+    const {category_data, data:categorys} = useCategoryData(); 
+
+    const putTable = useMutation(putCategorys,{
+        onSuccess:()=>{
+            category_data.refetch();
+        }
+    })
 
 
     //filter data with searchtext by product name and barcode and category and also sort with sortby ('title', 'products')
@@ -53,6 +63,8 @@ const CategoryTable = ({ data, searchtext = '', sortby = 'name', selectedRow, se
                             <th className='border px-2 py-2'>{t('No')}</th>
                             <th className='border px-2 py-2'>{t('Title')}</th>
                             <th className='border px-2 py-2'>{t('Products')}</th>
+                            <th className='border px-2 py-2'>{t('Status')}</th>
+
                         </tr>
                     </thead>
                     <tbody className='mt-1'>
@@ -65,12 +77,23 @@ const CategoryTable = ({ data, searchtext = '', sortby = 'name', selectedRow, se
                                 <td className='border px-2 py-1'>{index + 1}</td>
                                 <td className='border px-2 py-1'>{item.title}</td>
                                 <td className='border px-2 py-1 text-right'>{countProducts(item.id)}</td>
+                                <td className='border px-2 py-1 text-center'>
+                                    <input type="checkbox" checked={item.show == 'true' || item.show == "True" || item.show == true} onChange={e=>{
+                                        console.log(item.show)
+                                        putTable.mutate({
+                                            id : item.id,
+                                            show : !item.show
+                                        })
+                                    }}/> Show
+                                </td>
+                                
                             </tr>
                         )) : defaultdata.map((item, index) => (
                             <tr key={index} className='cursor-pointer hover:bg-slate-400'>
                                 <td className='border px-2 py-1'>{item.name}</td>
                                 <td className='border px-2 py-1'>{numberWithCommas(item.price)} </td>
                                 <td className='border px-2 py-1'>{numberWithCommas(item.price)} </td>
+
                             </tr>
                         ))}
                     </tbody>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Route, Navigate } from 'react-router-dom';
+import { Route, Navigate, useNavigate } from 'react-router-dom';
 //react query
 import { useMutation } from 'react-query';
 import { createCompanyProfile } from '../../server/api';
@@ -21,6 +21,8 @@ const CreateCompany = () => {
     const [loading, setLoading] = useState(false);
 
     const [isSucess , setIsSucess] = useState(false)
+
+    const navigate = useNavigate();
 
     const post_server = useMutation(createCompanyProfile, {
         onMutate: () => {
@@ -67,7 +69,9 @@ const CreateCompany = () => {
                 <p className="text-gray-800">Your company is ready to launch</p>
 
                 {/* //Contine button */}
-                <button className="bg-blue-500 text-white p-2 rounded-md w-full mt-5" onClick={() => setIsSucess(false)}>Continue</button>
+                <button className="bg-blue-500 text-white p-2 rounded-md w-full mt-5" onClick={() => 
+                    navigate('/')
+                }>Continue</button>
 
             </div>
             

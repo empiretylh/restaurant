@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 
+from polymorphic.models import PolymorphicModel
 from django.core.files.base import ContentFile
 # Create your models here.
 
@@ -24,7 +25,7 @@ class User(AbstractUser):
     name = models.CharField(max_length=255, null=True, blank=False)
     phoneno = models.CharField(max_length=11, null=True, blank=False)
     acc_type = models.CharField(max_length=50, null=True, default="Cashier") # Admin, Counter, Cashier, Chef, Waiter, Manager, 
-    device_limit = models.IntegerField(null=True, blank=True, default=1)
+    device_limit = models.IntegerField(null=True, blank=True, default=6)
     def __str__(self):
         return self.name
 
@@ -37,6 +38,7 @@ class Kitchen(models.Model):
 
 class Category(models.Model):
     title = models.CharField(max_length=255, null=False, blank=False)
+    show = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title + ' ' + self.user.username
@@ -104,6 +106,46 @@ class Table(models.Model):
 
     def __str__(self):
         return self.name
+
+class Order(PolymorphicModel):
+    qty = models.CharField(max_length=10)
+    total_price = models.CharField(max_length=10)
+    isCooking = models.BooleanField(default=False)
+    isComplete = models.BooleanField(default=False)
+    kitchen  = models.ForeignKey(Kitchen, on_delete=models.CASCADE, related_name="kitchens")
+
+
+    def __str__(self):
+        return str(self.id)  # 
+
+class FoodOrder(Order):
+    food = models.ForeignKey(Food, on_delete=models.CASCADE, related_name="food")
+   
+class ProductOrder(Order):
+    product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name="product")
+   
+class OrderDetail(models.Model):
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="table_name")
+    waiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waiter")
+    product_orders = models.ManyToManyField(ProductOrder, related_name ="product_orders")
+    food_orders = models.ManyToManyField(FoodOrder, related_name="food_orders")
+    guest = models.CharField(max_length=5, default=1)
+    date = models.DateTimeField(auto_now_add=True)
+    is_paid = models.BooleanField(default=False)
+    isOrder = models.BooleanField(default=False)
+
+class RealOrder(models.Model):
+    order_time = models.DateTimeField(auto_now_add=True)
+    isCooking = models.BooleanField(default=False)
+    isFinish = models.BooleanField(default=False)
+    start_cooking_time = models.DateTimeField(blank=True, null=True)
+    end_cooking_time = models.DateTimeField(blank=True, null=True)
+    orders = models.ForeignKey(OrderDetail, on_delete=models.CASCADE)
+
+
+
+
+
 
 
 class SoldProduct(models.Model):

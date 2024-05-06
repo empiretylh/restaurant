@@ -38,6 +38,9 @@ from openpyxl.styles import Font
 from django.core.mail import EmailMessage
 from . import models, serializers
 from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+
 import json
 
 
@@ -68,6 +71,7 @@ class LoginView(APIView):
         # user devices
         device = request.data.get('device', None)
 
+
         user = None
         if '@' in username_or_email:
             b = models.User.objects.get(email=username_or_email)
@@ -76,7 +80,10 @@ class LoginView(APIView):
         else:
             user = authenticate(username=username_or_email, password=password)
 
-        if not user:
+        check_acc_type =   models.User.objects.get(username=user.username, acc_type=acc_type)
+
+
+        if not user or not check_acc_type:
             return Response({'error': 'Invalid Credentials'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
@@ -85,11 +92,11 @@ class LoginView(APIView):
 
         device_count = models.Device.objects.filter(user=user).count()
 
-        if device_count >= user.device_limit:
-            raise ValidationError('Device Limit Exceeded')
-        else:
-            models.Device.objects.create(
-                user=user, unique_id=device_unique, device_name=device_name, acc_type=acc_type)
+        # if device_count >= user.device_limit:
+        #     raise ValidationError('Device Limit Exceeded')
+        # else:
+        #     models.Device.objects.create(
+        #         user=user, unique_id=device_unique, device_name=device_name, acc_type=acc_type)
 
         # add custom data to response
         response_data = {
@@ -112,8 +119,8 @@ class CreateUserApiView(CreateAPIView):
     def post(self, request):
         print(request.data)
 
-        device_unique = request.data.get("unique_id", None)
-        device_name = request.data.get("device_name", None)
+        # device_unique = request.data.get("unique_id", None)
+        # device_name = request.data.get("device_name", None)
         acc_type = request.data.get("acc_type", "Admin")
 
         serializers = self.get_serializer(data=request.data)
@@ -122,8 +129,8 @@ class CreateUserApiView(CreateAPIView):
 
         headers = self.get_success_headers(serializers.data)
         user = models.User.objects.get(username=request.data.get('username'))
-        models.Device.objects.create(
-            user=user, unique_id=device_unique, device_name=device_name, acc_type=acc_type)
+        # models.Device.objects.create(
+        #     user=user, unique_id=device_unique, device_name=device_name, acc_type=acc_type)
        
         token = Token.objects.create(user=serializers.instance)
         token_data = {'token': token.key}
@@ -146,7 +153,7 @@ class CreateCompany(APIView):
         user = get_user_model().objects.get(username=request.user)
         if user.acc_type == 'Admin':
             models.CompanyProfile.objects.create(
-            name=name, email=email, phoneno=phoneno, address=address, logo=logo, user=user)
+            name=name, email=email, phoneno=phoneno, address=address, logo=logo)
 
         return Response(status=status.HTTP_201_CREATED)
     
@@ -179,11 +186,46 @@ class CreateCompany(APIView):
 
         return Response(s.data)
 
+class AccountsAPIView(APIView):
+
+    def get(self, request):
+        data = models.User.objects.all()
+        s = serializers.ProfileSerializer(data, many=True)
+
+        return Response(s.data)
+
+    def put(self,request):
+        username = request.data.get('username', None)
+        user = models.User.objects.get(username=username)
+        user.phoneno = request.data.get('phoneno',user.phoneno)
+        user.acc_type =  request.data.get('acc_type', user.acc_type)
+
+        password = request.data.get('password',None)
+
+        if not password == None:
+            user.set_password(password)
+
+
+        user.save()
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete(self, request):
+        username = request.GET.get('username', None)
+        user = models.User.objects.get(username=username)
+
+        if request.user.acc_type == "Admin":
+            user.delete()
+            return Response(status=status.HTTP_200_OK)
+
+
+
+
 class KitchenAPIView(APIView):
     # permission_classes = [AllowAny]
 
     def get(self, request):
-        data = models.Kitchen.objects.all();
+        data = models.Kitchen.objects.all()
 
         s = serializers.KitchenSerializer(data, many=True)
 
@@ -340,6 +382,7 @@ class Category(APIView):
 
     def post(self, request):
         models.Category.objects.create(title=request.data['title'])
+        
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
@@ -352,11 +395,14 @@ class Category(APIView):
 
     def put(self, request):
         id =  request.data.get('id', None)
+
       
 
         ct = models.Category.objects.get(id=id)
         ct.title = request.data.get('title',ct.title)
+        ct.show = request.data.get('show', ct.show)
 
+        print(request.data.get('show'), ct.show)
 
         ct.save()
 
@@ -382,7 +428,6 @@ class Product(APIView):
     # permission_classes = [AllowAny]
 
     def get(self, request):
-        user = get_user_model().objects.get(username=request.user)
 
         expiry_filter_type = request.GET.get('expiry_filter_type', None)
         expiry_filter_day = request.GET.get('expiry_filter_day', None) #eg. 10 days, 5 days
@@ -734,6 +779,174 @@ class TableAPIView(APIView):
         table.delete()
 
         return Response(status=status.HTTP_200_OK)
+
+    
+from django.core.exceptions import ObjectDoesNotExist
+
+def handle_foodOrder_element(Order, item, qty):
+    total_price = int(qty) * int(item.price)
+
+    try:
+        orderelement = Order.food_orders.get(food=item, isCooking=False, isComplete=False)
+        orderelement.qty = int(orderelement.qty) + int(qty)
+        orderelement.total_price = int(item.price) * int(orderelement.qty)
+
+        # If the quantity becomes zero, delete the order element
+        if orderelement.qty == 0:
+            orderelement.delete()
+        else:
+            orderelement.save()
+    except ObjectDoesNotExist:
+        # If the quantity is zero, don't create a new order element
+        if qty != 0:
+            orderelement = models.FoodOrder.objects.create(food=item, qty=qty, total_price=total_price, kitchen=item.kitchen)
+            Order.food_orders.add(orderelement)
+
+    Order.save()
+
+
+def handle_productOrder_element(Order, item, qty):
+    total_price = int(qty) * int(item.price)
+
+    try:
+        orderelement = Order.product_orders.get(product=item)
+        orderelement.qty = int(orderelement.qty) + int(qty)
+        orderelement.total_price = int(item.price) * int(orderelement.qty)
+
+        # If the quantity becomes zero, delete the order element
+        if orderelement.qty == 0:
+            orderelement.delete()
+        else:
+            orderelement.save()
+    except ObjectDoesNotExist:
+        # If the quantity is zero, don't create a new order element
+        if qty != 0:
+            orderelement = models.ProductOrder.objects.create(product=item, qty=qty, total_price=total_price, kitchen=item.kitchen)
+            Order.product_orders.add(orderelement)
+
+    Order.save()
+
+    
+
+class OrderAPIView(APIView):
+
+    def get(self, request):
+        table_id = request.GET.get('table_id')
+        table = models.Table.objects.get(id=table_id)
+
+        PdOrder = models.OrderDetail.objects.filter(table=table, is_paid=False).order_by('-id')
+
+        ser = serializers.OrderDetailsSerializer(PdOrder.first())
+
+        return Response(ser.data)
+
+
+    def post(self, request):
+        table_id = request.data.get('table_id')
+        waiter = request.user
+        table = get_object_or_404(models.Table, id=table_id)
+
+        product_id = request.data.get('pdid')
+        qty = request.data.get('qty', 1)
+        is_product = request.data.get('ispd', True)
+
+        PdOrder = models.OrderDetail.objects.filter(table=table, waiter=waiter, is_paid=False).order_by('-id')
+
+        if PdOrder.exists():
+            Order = PdOrder.first()
+            Order.isOrder = False
+            Order.save()
+            table.status = True
+            table.save()
+        else:
+            Order = models.OrderDetail.objects.create(table=table, waiter=waiter)
+            Order.isOrder = False
+            Order.save()
+            table.status = True
+            table.save()
+
+
+        if is_product:
+            item = get_object_or_404(models.Product, id=product_id)
+            handle_productOrder_element(Order, item, qty)
+        else:
+            item = get_object_or_404(models.Food, id=product_id)
+            handle_foodOrder_element(Order, item, qty)
+
+        ser = serializers.OrderDetailsSerializer(Order)
+        return Response(ser.data)
+
+    def delete(self, request):
+        table_id =  request.GET.get('table_id')
+        print(table_id  )
+        table = get_object_or_404(models.Table, id=table_id)
+
+        waiter = request.user
+
+        PdOrder = models.OrderDetail.objects.filter(table=table, waiter=waiter, is_paid=False).order_by('-id')
+
+        if PdOrder.exists():
+            Order = PdOrder.first()
+            Order.product_orders.all().delete()
+            Order.food_orders.all().delete()
+            Order.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class SendOrder(APIView):
+
+    def get(self, request):
+
+        kitchen_id = request.GET.get("kitchen_id")
+
+      
+
+        Orders = models.RealOrder.objects.all()
+
+        ser = serializers.RealOrderSerializer(Orders,many=True)
+
+        return Response(ser.data)
+
+
+
+    def post(self, request):
+        orderdetail_id = request.data.get('order_id')
+        Order = models.OrderDetail.objects.get(id=orderdetail_id)
+        Order.isOrder = True
+        Order.save()
+
+        realorder = models.RealOrder.objects.create(orders=Order)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class OrderCompleteAPIView(APIView):
+    def post(self, request):
+        table_id = request.data.get('table_id')
+        waiter = request.user
+        table = get_object_or_404(models.Table, id=table_id)
+
+
+        PdOrder = models.OrderDetail.objects.filter(table=table, waiter=waiter, is_paid=False).order_by('-id')
+
+        PdOrder.is_paid = True
+        table.status = False
+        PdOrder.save()
+        table.save()
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete(self,request):
+        table_id = request.data.get('table_id')
+        table = get_object_or_404(models.Table, id=table_id)
+
+        table.status =  False
+        table.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+
 
 
 

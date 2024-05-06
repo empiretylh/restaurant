@@ -15,6 +15,10 @@ admin.site.register(models.Pricing)
 admin.site.register(models.PricingRequest)
 admin.site.register(models.Device)
 admin.site.register(models.ProductPrice)
+admin.site.register(models.Order)
+admin.site.register(models.OrderDetail)
+admin.site.register(models.FoodOrder)
+admin.site.register(models.ProductOrder)
 
 
 #Sales Digits App

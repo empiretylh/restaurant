@@ -40,6 +40,21 @@ export const getCompanyProfile = (data) => {
 }
 
 
+export const getAccounts = (data)=>{
+    getTokenLocalStorage();
+    return axios.get('/api/accounts/', data);
+
+}
+
+export const deleteAccount = (data)=>{
+    getTokenLocalStorage();
+    return axios.delete('/api/accounts/?username='+ data.username)
+}
+
+export const putAccount = (data)=>{
+    getTokenLocalStorage();
+    return axios.put('/api/accounts/',data)
+}
 
 export const createKitchen = (data)=>{
     getTokenLocalStorage();
@@ -122,6 +137,7 @@ export const deleteTable = (data)=>{
     getTokenLocalStorage();
     return axios.delete('/api/table/?id='+data.id);
 }
+
 
 // ----------------------------------------------------------------------------
 

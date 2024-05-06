@@ -16,13 +16,16 @@ urlpatterns = [
      path('api/food/', apiview.FoodAPIView.as_view(), name='food'),
      path('api/floor/', apiview.FloorAPIView.as_view(), name='floor'),
      path('api/table/', apiview.TableAPIView.as_view(), name='table'),
-
+     path('api/accounts/', apiview.AccountsAPIView.as_view(), name='accounts'),
+     path('api/orders/', apiview.OrderAPIView.as_view()),
+     path('api/sendorder/', apiview.SendOrder.as_view()),
+     path('api/orderscomplete/', apiview.OrderCompleteAPIView.as_view()),
 
     path('api/categorys/', apiview.Category.as_view(), name='category'),
     path('api/products/', apiview.Product.as_view(), name='product'), 
     path('api/products/changewithperentage/', apiview.ProductPriceChangeWithPercentage.as_view(), name='product_change_with_perentage'),
     path('api/soldproducts/', apiview.SoldProduct.as_view(), name='sold_product'),
-    path('api/sales/', apiview.Sales.as_view(), name='sales'),
+    path('api/sales/', apiview.Sales.as_view(), name='sales'),        
     path('api/expenses/', apiview.Expense.as_view(), name='expense'),
     path('api/purchases/', apiview.Purchase.as_view(), name='purchase'),
     path('api/otherincome/', apiview.OtherIncome.as_view(), name='otherincome'),

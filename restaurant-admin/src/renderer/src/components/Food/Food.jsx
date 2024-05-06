@@ -120,6 +120,14 @@ const Food = () => {
 		}
 	}, [FoodFilter])
 
+	//Compute total Amount by food filter
+	const totalPrice =  useMemo(() => {
+		if (FoodFilter) {
+			return FoodFilter.reduce((a, b) => parseInt(a) + (parseInt(b.price) * parseInt(b.qty)), 0);
+		}
+	}, [FoodFilter])
+
+
 
 	const WantToDeleteModal = () => {
 		return (
@@ -534,8 +542,13 @@ const Food = () => {
 				}
 
 			</div>
-			<div className="p-1 bg-yellow-200 w-full">
-				<h1 className="text-md font-bold">Total Price {numberWithCommas(totalAmount)} Ks</h1>
+			<div className="p-1 bg-yellow-200 w-full flex-row flex gap-2">
+				<h1 className="text-md font-bold ml-auto">Total Qty : {FoodFilter?.length} Items</h1> |
+
+
+				<h1 className="text-md font-bold">Total Amount : {numberWithCommas(totalPrice)} Ks</h1> |
+				<h1 className="text-md font-bold">Total Per Price : {numberWithCommas(totalAmount)} Ks</h1>
+
 			</div>
 		</div>
 	)

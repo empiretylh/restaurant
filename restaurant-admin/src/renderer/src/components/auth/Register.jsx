@@ -12,11 +12,11 @@ import Loading from '../custom_components/Loading';
 const Register = () => {
 
     const [username, setUsername] = useState('');
-    const [shopName, setShopName] = useState('');
-    const [address, setAddress] = useState('');
     const [phoneno, setPhoneno] = useState('');
-    const [email, setEmail] = useState('');
+    const [shopName, setShopName] = useState('');
     const [password, setPassword] = useState('');
+    const [address, setAddress] = useState('');
+    const [email, setEmail] = useState('');
 
     const [loading, setLoading] = useState(false);
 

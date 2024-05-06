@@ -14,7 +14,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ['name', 'username', 
-                  'phoneno', 'password']
+                  'phoneno', 'password','acc_type']
         write_only_fields = ('password')
 
     def create(self, validated_data):
@@ -39,7 +39,7 @@ class KitchenSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category()
-        fields = ['id', 'title']
+        fields = ['id', 'title','show']
 
 class ExtraPriceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,11 +49,12 @@ class ExtraPriceSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
 
     extraprice = ExtraPriceSerializer(many=True, read_only=True)
+    category_show = serializers.CharField(source='category.show')
 
     class Meta:
         model = models.Product()
         fields = ['id', 'name', 'price', 'cost', 'qty',
-                  'date', 'description', 'category', 'pic','barcode','supplier_payment','expiry_date','extraprice','unit','totalunit','isUnit','kitchen']
+                'date', 'description', 'category', 'pic','barcode','supplier_payment','expiry_date','extraprice','unit','totalunit','isUnit','kitchen','category_show']
 
 class FoodIntegrientSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='product.name')
@@ -72,9 +73,10 @@ class FoodSerializer(serializers.ModelSerializer):
 # floor and table serializer
     
 class TableSerializer(serializers.ModelSerializer):
+    floor_name = serializers.CharField(source='floor.name')
     class Meta:
         model = models.Table()
-        fields = ['id', 'name', 'floor','status']
+        fields = ['id', 'name', 'floor','status', 'floor_name']
 
 
 class FloorSerializer(serializers.ModelSerializer):
@@ -84,6 +86,48 @@ class FloorSerializer(serializers.ModelSerializer):
         model = models.Floor()
         fields = ['id', 'name','tables']
 
+class OrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Order()
+        fields = ['id','qty','total_price','isCooking','isComplete','kitchen']
+
+class FoodOrderSerializer(serializers.ModelSerializer):
+    food = FoodSerializer(many=False, read_only=True)
+    class Meta:
+        model = models.FoodOrder()
+        fields = ['id','food','qty','total_price','isCooking','isComplete','kitchen']
+
+class ProductOrderSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(many=False, read_only=True)
+    class Meta:
+        model = models.ProductOrder()
+        fields = ['id','product','qty','total_price','isCooking','isComplete','kitchen']
+
+class OrderDetailsSerializer(serializers.ModelSerializer):
+    product_orders = ProductOrderSerializer(many=True, read_only=True)
+    food_orders = FoodOrderSerializer(many=True, read_only=True)
+    table = TableSerializer()
+
+    class Meta:
+        model = models.OrderDetail()
+        fields = ['id','table','waiter','date','is_paid','product_orders', 'food_orders','guest','isOrder']
+
+# order_time = models.DateTimeField(auto_now_add=True)
+#     isCooking = models.BooleanField(default=False)
+#     isFinish = models.BooleanField(default=False)
+#     start_cooking_time = models.DateTimeField(blank=True)
+#     end_cooking_time = models.DateTimeField(blank=True)
+    
+class RealOrderSerializer(serializers.ModelSerializer):
+
+    orders = OrderDetailsSerializer(read_only=True)
+
+    class Meta:
+        model = models.RealOrder()
+        fields = ['id','order_time', 'isCooking', 'isFinish','start_cooking_time', 'end_cooking_time','orders']
+
+    
 
 class SoldProductSerializer(serializers.ModelSerializer):
     # product_name = serializers.CharField(source='name.name')

@@ -1,9 +1,10 @@
 import React from 'react';
 import {useNavigate} from 'react-router-dom';
+import { useAuth } from '../../context/AuthContextProvider';
 
 
 const Bar = ({children}) => {
-
+    const {token, LOGOUT} = useAuth();
     let navigate = useNavigate();
 
     return (
@@ -37,7 +38,9 @@ const Bar = ({children}) => {
                 }} className="bg-gray-200  font-bold p-2 flex items-center justify-center rounded">
                   <icon className="bi bi-bell text-2xl" />
                 </button>
-                <button className="bg-gray-200 font-bold p-2 flex items-center justify-center rounded">
+                <button onClick={()=>{
+                  LOGOUT();
+                }} className="bg-gray-200 font-bold p-2 flex items-center justify-center rounded">
                   <icon className="bi bi-person text-2xl" />
                 </button>
                 {/* settings */}
