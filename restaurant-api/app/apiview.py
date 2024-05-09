@@ -790,6 +790,8 @@ def handle_foodOrder_element(Order, item, qty):
         orderelement = Order.food_orders.get(food=item, isCooking=False, isComplete=False)
         orderelement.qty = int(orderelement.qty) + int(qty)
         orderelement.total_price = int(item.price) * int(orderelement.qty)
+        orderelement.isComplete =False
+
 
         # If the quantity becomes zero, delete the order element
         if orderelement.qty == 0:
@@ -812,6 +814,7 @@ def handle_productOrder_element(Order, item, qty):
         orderelement = Order.product_orders.get(product=item)
         orderelement.qty = int(orderelement.qty) + int(qty)
         orderelement.total_price = int(item.price) * int(orderelement.qty)
+        orderelement.isComplete =False
 
         # If the quantity becomes zero, delete the order element
         if orderelement.qty == 0:
@@ -893,21 +896,43 @@ class OrderAPIView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+    def put(self, request):
+        itemOrderid = request.data.get('itemorderid')
+        isDone =  request.data.get('isDone', True)
+
+        print(itemOrderid, isDone)
+
+        order = models.Order.objects.get(id=itemOrderid)
+        order.isComplete = isDone
+        order.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 class SendOrder(APIView):
 
     def get(self, request):
 
         kitchen_id = request.GET.get("kitchen_id")
+        time = request.GET.get('time', 'today')
+        today = datetime.now()
 
-      
+        this_month_start = today.replace(day=1)
+        this_week_start = today - timedelta(days=today.weekday())
+        this_year_start = today.replace(month=1, day=1)
 
-        Orders = models.RealOrder.objects.all()
+
+        if time == 'today':
+            Orders = models.RealOrder.objects.filter(order_time__date=today)
+        elif time == 'week':
+            Orders = models.RealOrder.objects.filter(order_time__date__gte=this_week_start)
+        elif time == 'month':
+            Orders = models.RealOrder.objects.filter(order_time__date__gte=this_month_start)
+        elif time == 'year':
+            Orders = models.RealOrder.objects.filter(order_time__date__gte=this_year_start)
 
         ser = serializers.RealOrderSerializer(Orders,many=True)
 
         return Response(ser.data)
-
 
 
     def post(self, request):
@@ -915,10 +940,62 @@ class SendOrder(APIView):
         Order = models.OrderDetail.objects.get(id=orderdetail_id)
         Order.isOrder = True
         Order.save()
+        try:
+            realorder =  models.RealOrder.objects.get(orders=Order)
+            print("Notfiying the chef..............................................")
 
-        realorder = models.RealOrder.objects.create(orders=Order)
+        except ObjectDoesNotExist:
+            realorder = models.RealOrder.objects.create(orders=Order)
 
         return Response(status=status.HTTP_200_OK)
+
+    #.................. start cooking........................
+    def put(self, request):
+        realorder = request.data.get('id')
+        put_type = request.data.get('type', 'cook') #cook, finish
+        kitchen = request.data.get('kitchen', 1)
+
+        realorder = models.RealOrder.objects.get(id=realorder)
+        if put_type == 'cook':
+            realorder.isCooking = True 
+            for fd in realorder.orders.food_orders.all():
+                if fd.kitchen == kitchen:
+                    if not fd.isCooking:
+                        fd.isCooking = True 
+                    fd.save()
+
+            for pd in realorder.orders.product_orders.all():
+                if fd.kitchen == kitchen:
+                    if not fd.isCooking:
+                        pd.isCooking = True 
+                    pd.save()
+
+            now = datetime.now()
+            realorder.start_cooking_time = now 
+            realorder.save()
+
+
+        if put_type == 'finish':
+            realorder.isFinish = True
+            for fd in realorder.orders.food_orders.all():
+                fd.isComplete = True 
+                fd.save()
+
+            for pd in realorder.orders.product_orders.all():
+                pd.isComplete = True 
+                pd.save()
+
+            now = datetime.now()
+            realorder.end_cooking_time = now 
+
+            realorder.save()
+
+
+        return Response(status=status.HTTP_200_OK)
+
+
+
+
 
 
 class OrderCompleteAPIView(APIView):
@@ -1980,6 +2057,7 @@ class ProfileAPIView(APIView):
 
     def get(self, request, format=None):
         user = models.User.objects.get(username=request.user)
+        print(user.username)
         s = serializers.ProfileSerializer(user)
 
         return Response(s.data)

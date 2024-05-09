@@ -16,7 +16,7 @@ import FoodDataProvider from './context/FoodDataProvider';
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import CategoryDataProvider from './context/CategoryDataProvider';
 import ProductsDataProvider from './context/ProductsDataProvider';
-
+import ProfileDataProvider from './context/ProfileDataProvider';
 
 axios.defaults.baseURL = API;
 
@@ -35,6 +35,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+     <ProfileDataProvider>
+       
       <CategoryDataProvider>
         <ProductsDataProvider>
           <KitchenDataProvider>
@@ -64,6 +66,8 @@ function App() {
         </ProductsDataProvider>
 
       </CategoryDataProvider>
+
+     </ProfileDataProvider>
 
     </QueryClientProvider>
   )

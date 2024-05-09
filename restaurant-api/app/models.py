@@ -26,8 +26,9 @@ class User(AbstractUser):
     phoneno = models.CharField(max_length=11, null=True, blank=False)
     acc_type = models.CharField(max_length=50, null=True, default="Cashier") # Admin, Counter, Cashier, Chef, Waiter, Manager, 
     device_limit = models.IntegerField(null=True, blank=True, default=6)
+  
     def __str__(self):
-        return self.name
+        return self.username
 
 class Kitchen(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False)

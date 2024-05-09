@@ -1450,25 +1450,6 @@ class ProfileAPIView(APIView):
         user = models.User.objects.get(username=request.user)
         s = serializers.ProfileSerializer(user)
 
-        today = timezone.now()
-        # 2022-11-02 08:33:40+00:00
-        # endd  = datetime.strptime(str(user.end_d),"%Y-%m-%d %H:%M:%S%z")
-        print(today, 'Today')
-        endd = user.end_d
-        print(endd, 'End Date')
-        print(today >= endd, 'Compare Two Date')
-        if today >= endd:
-            print('end Plan')
-            user.is_plan = False
-            user.save()
-        else:
-            user.is_plan = True
-            user.save()
-
-        print(timezone.get_current_timezone)
-
-        s = serializers.ProfileSerializer(user)
-
         return Response(s.data)
 
     def post(self, request, format=None):

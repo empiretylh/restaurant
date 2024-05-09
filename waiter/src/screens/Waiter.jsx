@@ -92,7 +92,7 @@ const Waiter = () => {
         data = data[0]?.tables
             ?.sort((a, b) => a.name.localeCompare(b.name))
             .filter((item) =>
-                item.name.toLowerCase().includes(searchText.toLowerCase()),
+            item.name.toLowerCase().includes(searchText.toLowerCase())
             );
 
         return data;
@@ -295,7 +295,7 @@ const Waiter = () => {
                     </div>
                     <div className="flex-row flex gap-2 items-center ml-auto">
                         <i className={`bi bi-circle-fill text-[10px]  ${item.isComplete ? 'text-green-500' : item.isCooking ? 'text-pink-500' : 'text-blue-500'}`}></i>
-                        <p className="text-[10px]">Order</p>
+                        <p className="text-[10px]">{item.isComplete ? 'Complete' : item.isCooking ? 'Cooking' : 'Order'}</p>
                     </div>
                 </div>
             );

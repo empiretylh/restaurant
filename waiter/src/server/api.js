@@ -121,6 +121,13 @@ export const postOrder = (data) =>{
 
 }
 
+
+export const kitchenPutOrder = (data) =>{
+    getTokenLocalStorage();
+    return axios.put('/api/orders/',data)
+
+}
+
 export const getOrder = ({queryKey})=>{
 
     getTokenLocalStorage();
@@ -138,10 +145,16 @@ export const sendOrder = (data)=>{
     return axios.post('/api/sendorder/',data)
 }
 
+
+export const putstartCooking = (data)=>{
+    getTokenLocalStorage();
+    return axios.put('/api/sendorder/',data)
+}
+
 export const getOrders = ({queryKey})=>{
     getTokenLocalStorage();
-    const [_, kitchen_id] = queryKey;
-    return axios.get('/api/sendorder/?kitchen_id='+kitchen_id)
+    const [_, kitchen_id,time] = queryKey;
+    return axios.get('/api/sendorder/'+'?time='+time)
 }
 
 export const postCompleteOrder = (data) =>{
@@ -152,4 +165,9 @@ export const postCompleteOrder = (data) =>{
 export const vacantTable = (data)=>{
     getTokenLocalStorage();
     return axios.delete('/api/orderscomplete', data)
+}
+
+export const getProfile = (data)=>{
+    getTokenLocalStorage();
+    return axios.get('/api/profile/', data)
 }

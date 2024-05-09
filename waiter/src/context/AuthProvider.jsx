@@ -17,10 +17,15 @@ const AuthProvider =({children})=>{
 
         setLoading(false);
         
-    },[token])
+    },[token]);
+
+    const LogOut = ()=>{
+        setToken(null);
+        localStorage.removeItem('token')
+    }
 
     return (
-        <AuthContext.Provider value={{token, setToken, loading, setLoading, isWaiter, setIsWaiter}}>
+        <AuthContext.Provider value={{token, setToken, loading, setLoading, isWaiter, setIsWaiter, LogOut}}>
             {children}
             </AuthContext.Provider>
     )
