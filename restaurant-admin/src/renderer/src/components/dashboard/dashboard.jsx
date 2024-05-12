@@ -32,7 +32,7 @@ const Dashboard = () => {
               <CardBtn name='Food' image={IMAGE.food} nav={"/food"}/>
               <CardBtn name='Table' image={IMAGE.table} nav={"/table"}/>
                 <CardBtn name='Accounts' image={IMAGE.account} nav={"/accounts"}/>
-                <CardBtn name='Menu' image={IMAGE.loading} nav={"/menu"}/>
+                <CardBtn name='Menu' image={IMAGE.loading} nav={"/sales"}/>
 
                 <CardBtn name='Orders' image={IMAGE.loading} nav={"/orders"}/>
                 <CardBtn name='Reports' image={IMAGE.loading} nav={"/reports"}/>    

@@ -245,7 +245,7 @@ const Waiter = () => {
             setIsOpen(
                 localStorage.getItem("OrderOpen" + item.id + "-" + selectedTable?.id) === "true",
             );
-        }, [item]);
+        }, [item, isOpen]);
 
         const Head = () => {
             return (

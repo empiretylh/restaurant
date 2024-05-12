@@ -135,8 +135,17 @@ export const putTable = (data)=>{
 
 export const deleteTable = (data)=>{
     getTokenLocalStorage();
-    return axios.delete('/api/table/?id='+data.id);
+    return axios.delete('/api/table/?id='+data.id); 
 }
+
+
+
+export const getOrders = ({queryKey})=>{
+    getTokenLocalStorage();
+    const [_, kitchen_id,time] = queryKey;
+    return axios.get('/api/sendorder/'+'?time='+time)
+}
+
 
 
 // ----------------------------------------------------------------------------

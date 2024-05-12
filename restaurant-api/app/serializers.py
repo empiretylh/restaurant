@@ -125,7 +125,7 @@ class RealOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.RealOrder()
-        fields = ['id','order_time', 'isCooking', 'isFinish','start_cooking_time', 'end_cooking_time','orders']
+        fields = ['id','order_time', 'isCooking', 'isFinish','start_cooking_time', 'end_cooking_time','orders','isPaid']
 
     
 

@@ -5,7 +5,7 @@ import Login from "../components/auth/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
 import Dashboard from "../components/dashboard/dashboard";
 import Products from "../components/products/Products";
-import Sales from "../components/Sales/Sales";
+import Sales from "../components/Cashier/Cashier";
 import Expense from "../components/Expense/Expense";
 import OtherIncome from "../components/OtherIncome/OtherIncome";
 import Customer from "../components/Customer/Customer";

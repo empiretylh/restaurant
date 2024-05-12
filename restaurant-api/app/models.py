@@ -142,7 +142,7 @@ class RealOrder(models.Model):
     start_cooking_time = models.DateTimeField(blank=True, null=True)
     end_cooking_time = models.DateTimeField(blank=True, null=True)
     orders = models.ForeignKey(OrderDetail, on_delete=models.CASCADE)
-
+    isPaid = models.BooleanField(default=False)
 
 
 
