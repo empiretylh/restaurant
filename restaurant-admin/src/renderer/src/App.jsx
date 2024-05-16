@@ -23,6 +23,7 @@ import FoodDataProvider from './context/FoodDataProvider'
 import FloorsDataProvider from './context/FloorDataProvider'
 import FloorDataProvider from './context/FloorDataProvider'
 import AccountsDataProvider from './context/AccountsContextProvider'
+import CashOrderProvider from './context/CashOrderContextProvider'
 
 axios.defaults.baseURL = localStorage.getItem('domain') || domainURL
 
@@ -43,20 +44,23 @@ function App() {
                     <ProductsDataProvider>
                       <FoodDataProvider>
                         <AccountsDataProvider>
+                          <CashOrderProvider>
 
-                        {/*   <ExpenseDataProvider> */}
-                        {/*     <OtherIncomeDataProvider> */}
-                        {/*       <CustomerDataProvider> */}
-                        {/*         <CartContextProvider> */}
-                        {/*           <CustomVoucherDataProvider> */}
-                        <Routes />
-                        {/*           </CustomVoucherDataProvider> */}
-                        {/*         </CartContextProvider> */}
-                        {/*       </CustomerDataProvider> */}
-                        {/*     </OtherIncomeDataProvider> */}
-                        {/*   </ExpenseDataProvider> */}
+                            {/*   <ExpenseDataProvider> */}
+                            {/*     <OtherIncomeDataProvider> */}
+                            {/*       <CustomerDataProvider> */}
+                            {/*         <CartContextProvider> */}
+                            {/*           <CustomVoucherDataProvider> */}
+                            <Routes />
+                            {/*           </CustomVoucherDataProvider> */}
+                            {/*         </CartContextProvider> */}
+                            {/*       </CustomerDataProvider> */}
+                            {/*     </OtherIncomeDataProvider> */}
+                            {/*   </ExpenseDataProvider> */}
+
+                          </CashOrderProvider>
                         </AccountsDataProvider>
-                        
+
                       </FoodDataProvider>
                     </ProductsDataProvider>
                     {/* </SupplierDataProvider> */}

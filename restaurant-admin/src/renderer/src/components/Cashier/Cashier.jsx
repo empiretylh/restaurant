@@ -1,4 +1,4 @@
-import react, { useState, useEffect, useMemo } from 'react'
+import react, { useState, useEffect, useMemo, useContext } from 'react'
 import TopBar from '../TopBar/Bar'
 import { IMAGE } from '../../config/image'
 import CustomModal from '../custom_components/CustomModal';
@@ -14,6 +14,8 @@ import Loading from '../custom_components/Loading';
 import CashierProductTable from './CashierProductTable';
 import { useFloorData } from '../../context/FloorDataProvider';
 import VoucherView from './VoucherView';
+import { CashOrderContextProvider, useCashOrder } from '../../context/CashOrderContextProvider';
+import SplitView from './SplitView';
 
 const Cashier = () => {
 
@@ -23,51 +25,14 @@ const Cashier = () => {
 	const { floor_data, data: floors } = useFloorData();
 
 	const [showDelete, setShowDelete] = useState(false);
+	const [selectedVoucher, setSelectedVoucher] = useState([]);
 
 	const [selectedFloor, setSelectedFloor] = useState(localStorage.getItem('SelectedFloor_Cashier'))
 
-	const [selectedRows, setSelectedRows] = useState([]);
-
 	const [showTable, setShowTable] = useState('Orders');
-	const [time, setTime] = useState('year')
+	const [showSplitView, setShowSplitView] = useState(false);
 
-	const [isCombine, setIsCombine] = useState(false)
-
-	const orders_data = useQuery(['orders_data', '', time], getOrders)
-
-	const OrderDataFilter = useMemo(() => {
-		if (orders_data?.data) {
-			let data = orders_data?.data.data
-
-
-			data.map(order => {
-
-				let totalPrice = 0;
-
-				order.orders.food_orders?.map(e => {
-					totalPrice += parseInt(e.total_price);
-				})
-
-				order.orders.product_orders?.map(e => {
-					totalPrice += parseInt(e.total_price);
-				})
-
-				order.totalPrice = totalPrice;
-				return order;
-			})
-
-
-			data = data.filter((item) => !item.isPaid)
-
-			return data;
-
-
-
-		}
-
-
-	}, [orders_data?.data])
-
+	const { orders_data, Orderdata, isCombine, setIsCombine, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher } = useContext(CashOrderContextProvider);
 
 	return (
 		<div className="w-screen h-screen bg-gray-300 flex flex-col items-center ">
@@ -91,7 +56,7 @@ const Cashier = () => {
 						</select>
 					</div>
 
-					<button onClick={() => { setShowAdd(true); setIsEdit(false); setEditValue(null) }} className="p-3 text-black border-gray-400 border rounded font-mono hover:bg-green-400">
+					<button onClick={() => { setShowAdd(true); }} className="p-3 text-black border-gray-400 border rounded font-mono hover:bg-green-400">
 						<icon className="bi bi-plus-circle"></icon>	Delivery Order
 					</button>
 					{/* delete button */}
@@ -105,6 +70,7 @@ const Cashier = () => {
 
 				</div>
 			</TopBar>
+			<SplitView showSplitView={showSplitView} setShowSplitView={setShowSplitView} />
 
 			<div className="w-full grid grid-cols-6" style={{
 				height: 'calc(100vh - 60px)',
@@ -120,6 +86,10 @@ const Cashier = () => {
 							setShowTable('Delivery')
 						}}>
 							<i class="bi bi-truck"></i> Delivery</h1>
+						<h1 className={`text-md w-[100px] text-center p-2 border-b cursor-pointer ${showTable == 'History' && 'border-blue-500 border-b-2'}`} onClick={() => {
+							setShowTable('History')
+						}}>
+							<i class="bi bi-clock"></i> History</h1>
 
 
 						<div className="ml-auto flex flex-row items-center gap-2">
@@ -130,20 +100,33 @@ const Cashier = () => {
 						</div>
 
 					</div>
-					<CashierProductTable data={OrderDataFilter} selectedRows={selectedRows} setSelectedRows={setSelectedRows} isCombine={isCombine} />
+					<CashierProductTable data={Orderdata} selectedRows={selectedRows} setSelectedRows={setSelectedRows} isCombine={isCombine} />
 
 				</div>
 				<div className='bg-white col-span-2 mx-2 mt-2'>
 					<div className="flex flex-row items-center mb-2">
 						<h1 className={`text-md  text-center p-2 border-b cursor-pointer  hover:border-b-2  hover:border-blue-500`} onClick={() => {
-							setShowTable('Orders')
+							if (selectedVoucher.length > 0) {
+								let result = confirm("Are you sure want to remove selected voucher");
+								if (result) {
+									selectedVoucher.map(item => {
+										RemoveVoucher(item);
+									})
+								}
+							} else {
+								return alert("Please select voucher")
+
+							}
+
+
 						}}>
 							<i class="bi bi-trash"></i> Delete</h1>
 
-						<h1 className={`text-md text-center p-2 border-b cursor-pointer  hover:border-b-2  hover:border-blue-500`} onClick={() => {
-							setShowTable('Orders')
+						<h1 className={`text-md text-center p-2 border-b cursor-pointer  hover:border-b-2  hover:border-blue-500 ${Voucher.length >= 2 && 'border-b-2 border-blue-800'}`} onClick={() => {
+							setShowSplitView(true)
+
 						}}>
-							<i class="bi bi-app"></i> Split Voucher</h1>
+							<i class="bi bi-layout-split"></i> Split Voucher</h1>
 
 
 						<h1 className={`text-md text-center p-2 border-b cursor-pointer hover:border-b-2  hover:border-blue-500`} onClick={() => {
@@ -153,12 +136,15 @@ const Cashier = () => {
 						<h1 className={`text-md text-center p-2 border-b cursor-pointer hover:border-b-2  hover:border-blue-500`} onClick={() => {
 							setShowTable('Orders')
 						}}>
-							<i class="bi bi-app"></i> Discount</h1>
+							<i class="bi bi-memory"></i> Save All</h1>
 					</div>
 
-					<div className='flex flex-col'>
-						<div className='p-2'>
-							<VoucherView data={OrderDataFilter} selectedRows={selectedRows} />
+					<div className='flex flex-col overflow-y-auto'>
+						<div className='p-2 flex flex-col gap-2'>
+							{Voucher.map((Order, index) =>
+								<VoucherView data={Order} index={index} selectedRows={selectedRows} selectedVoucher={selectedVoucher} setSelectedVoucher={setSelectedVoucher} />
+
+							)}
 						</div>
 					</div>
 				</div>
