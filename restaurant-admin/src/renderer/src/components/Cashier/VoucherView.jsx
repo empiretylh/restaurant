@@ -1,21 +1,72 @@
 import react, { useState, useMemo, useContext } from 'react';
 import numberWithCommas from '../custom_components/NumberWithCommas';
 import Collapsible from 'react-collapsible'
-import { useQuery } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import { CashOrderContextProvider } from '../../context/CashOrderContextProvider';
+import { postOrderPaid } from '../../server/api';
 
 
-const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = false, index, selectedVoucher, setSelectedVoucher }) => {
+const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = false, isDelivery = false, index, selectedVoucher, setSelectedVoucher }) => {
 
-	const { onChangeCustomerName, onDiscountChange } = useContext(CashOrderContextProvider);
+
+
+	const { orders_data, onChangeCustomerName, onDiscountChange, RemoveVoucher, loading, setLoading } = useContext(CashOrderContextProvider);
+
+
+	const SaveVoucher = useMutation(postOrderPaid, {
+		onMutate: (e) => {
+			setLoading(true)
+		},
+		onSuccess: (e) => {
+			RemoveVoucher(data?.voucherid)
+			setLoading(false)
+			orders_data.refetch()
+			if (isDelivery) {
+				orders_data.refetch()
+	
+			}
+		},
+		onError: (e) => {
+			setLoading(false);
+			console.log(e)
+		}
+	})
+
+	const computePrice = (discount, totalPrice) => {
+		if (discount > 0) {
+
+			let discount_value = parseFloat(discount)
+			let discounts = Math.round((parseFloat(totalPrice) * discount_value / 100), 2)
+
+			console.log(discounts, ".......", totalPrice)
+			return parseInt(totalPrice) - parseInt(discounts);
+		} else {
+			return totalPrice;
+		}
+
+	}
+
 
 	const computeTotalPrice = useMemo(() => {
 		let totalPrice = 0;
 		data?.orders?.map((item) => {
-			totalPrice = totalPrice + parseInt(item.total_price)
+			totalPrice = totalPrice + parseInt(computePrice(item?.discount, item.total_price))
 		})
 		return totalPrice;
 	}, [data?.orders, onDiscountChange])
+
+	const onSaveVoucher = () => {
+
+		SaveVoucher.mutate({
+			order_ids: data.combine_realorderid,
+			table_ids: data.combine_tableid,
+			customername: data.customername,
+			totalPrice: data?.splitbill || computeTotalPrice,
+			isDelivery: isDelivery,
+
+		})
+	}
+
 
 	const OrderItem = ({ item }) => {
 		const [isOpen, setIsOpen] = useState(false);
@@ -52,7 +103,7 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 						<div className='flex flex-row items-center'>
 							{item?.discount != 0 && item.discount && <h1 className="text-sm ml-auto text-red-500">-{item?.discount}%</h1>}
 
-							<h1 className="text-md ml-auto">{numberWithCommas(item?.total_price)}</h1>
+							<h1 className="text-md ml-auto">{numberWithCommas(computePrice(item?.discount, item?.total_price))}</h1>
 							<div
 								className="p-1"
 								onClick={() => {
@@ -108,9 +159,12 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 		<div className='bg-white shadow-lg w-full  border p-2 relative'>
 
 			<div className='flex flex-row items-center'>
+
 				<div>
 					<h1>Voucher : {index + 1}</h1>
-					<h1 className="text-sm font-bold text-blue-800">{data.table}</h1>
+					{data["0"]?.orders.isDelivery ?
+						<h1 className="text-sm font-bold text-blue-800">{"Delivery "}</h1>
+						: <h1 className="text-sm font-bold text-blue-800">{data.table}</h1>}
 				</div>
 				<div className="flex flex-col ml-auto">
 
@@ -128,7 +182,9 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 
 			</div>
 			<div className='w-full p-1 flex flex-row gap-2 items-center'>
-				<button className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
+				<button onClick={() => {
+					onSaveVoucher();
+				}} className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
 					<icon className="bi bi-save" />
 					Save
 				</button>
@@ -144,7 +200,7 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 					{data?.splitbill || data?.totalPrice ? <h1 className='font-bold text-md ml-auto text-red-600  text-right  w-full'>
 
 						Total Bill : {numberWithCommas(data?.splitbill || data?.totalPrice)}
-					</h1>:null}
+					</h1> : null}
 				</div>
 
 			</div>

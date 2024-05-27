@@ -16,6 +16,7 @@ const SplitView = ({ showSplitView, setShowSplitView }) => {
         orders_data.refetch();
     }, [splitType])
 
+
     const OrderItem = ({ item, side }) => {
 
 
@@ -55,14 +56,30 @@ const SplitView = ({ showSplitView, setShowSplitView }) => {
     };
 
 
+    const computePrice = (discount, totalPrice) => {
+		if (discount > 0) {
+
+			let discount_value = parseFloat(discount)
+			let discounts = Math.round((parseFloat(totalPrice) * discount_value / 100), 2)
+
+			console.log(discounts,".......", totalPrice)
+			return parseInt(totalPrice) - parseInt(discounts);
+		}else{
+			return totalPrice;
+		}
+
+	}
 
     const computeTotalPrice = (data) => {
         let totalPrice = 0;
         data?.orders?.map((item) => {
-            totalPrice = totalPrice + parseInt(item.total_price)
+            totalPrice = totalPrice + parseInt(computePrice(item?.discount,item.total_price))
+
         })
         return totalPrice;
     }
+
+
 
 
 

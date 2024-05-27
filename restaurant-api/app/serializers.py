@@ -54,7 +54,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Product()
         fields = ['id', 'name', 'price', 'cost', 'qty',
-                'date', 'description', 'category', 'pic','barcode','supplier_payment','expiry_date','extraprice','unit','totalunit','isUnit','kitchen','category_show']
+                'date', 'description', 'category', 'pic','barcode','supplier_payment','expiry_date','extraprice','unit','totalunit','isUnit','kitchen','category_show','profit']
 
 class FoodIntegrientSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='product.name')
@@ -68,7 +68,7 @@ class FoodSerializer(serializers.ModelSerializer):
    
     class Meta:
         model = models.Food()
-        fields = ['id','name','price','qty','description','category','pic','kitchen','integrient','isavaliable']
+        fields = ['id','name','price','qty','description','category','pic','kitchen','integrient','isavaliable','profit']
 
 # floor and table serializer
     
@@ -90,28 +90,34 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Order()
-        fields = ['id','qty','total_price','isCooking','isComplete','kitchen']
+        fields = ['id','qty','total_price','isCooking','isComplete','kitchen','profit','discount']
 
 class FoodOrderSerializer(serializers.ModelSerializer):
     food = FoodSerializer(many=False, read_only=True)
     class Meta:
         model = models.FoodOrder()
-        fields = ['id','food','qty','total_price','isCooking','isComplete','kitchen']
+        fields = ['id','food','qty','total_price','isCooking','isComplete','kitchen','discount']
 
 class ProductOrderSerializer(serializers.ModelSerializer):
     product = ProductSerializer(many=False, read_only=True)
     class Meta:
         model = models.ProductOrder()
-        fields = ['id','product','qty','total_price','isCooking','isComplete','kitchen']
+        fields = ['id','product','qty','total_price','isCooking','isComplete','kitchen','discount']
+
+class DeliveryOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DeliveryOrder()
+        fields = ['id','address','phoneno','deliveryCharges','customername','exceptTime','description']
 
 class OrderDetailsSerializer(serializers.ModelSerializer):
     product_orders = ProductOrderSerializer(many=True, read_only=True)
     food_orders = FoodOrderSerializer(many=True, read_only=True)
     table = TableSerializer()
+    deliveryorder = DeliveryOrderSerializer()
 
     class Meta:
         model = models.OrderDetail()
-        fields = ['id','table','waiter','date','is_paid','product_orders', 'food_orders','guest','isOrder']
+        fields = ['id','table','waiter','date','is_paid','product_orders', 'food_orders','guest','isOrder','isDelivery','deliveryorder']
 
 # order_time = models.DateTimeField(auto_now_add=True)
 #     isCooking = models.BooleanField(default=False)
@@ -125,9 +131,17 @@ class RealOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.RealOrder()
-        fields = ['id','order_time', 'isCooking', 'isFinish','start_cooking_time', 'end_cooking_time','orders','isPaid']
+        fields = ['id','order_time', 'isCooking', 'isFinish','start_cooking_time', 'end_cooking_time','orders','isPaid','originaltotalPrice','totalPayment','totalProfit','realProfit']
 
-    
+
+class SaveVoucherHistorySerializer(serializers.ModelSerializer):
+
+    order = RealOrderSerializer(read_only=True)
+
+    class Meta:
+        model = models.SaveVoucherHistory()
+        fields= ['id','customername','date','order', 'originaltotalPrice','discount','delivery','totalPrice','totalPayment','payment_type','description','user']
+
 
 class SoldProductSerializer(serializers.ModelSerializer):
     # product_name = serializers.CharField(source='name.name')

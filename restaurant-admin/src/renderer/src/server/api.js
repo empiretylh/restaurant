@@ -147,6 +147,29 @@ export const getOrders = ({queryKey})=>{
 }
 
 
+export const postOrder = (data) =>{
+    getTokenLocalStorage();
+    return axios.post('/api/orders/',data)
+
+}
+
+
+export const postItemDiscount = (data) =>{
+    getTokenLocalStorage();
+    return axios.post('/api/itemdiscount/',data)
+
+}
+
+export const postOrderPaid = (data)=>{
+    getTokenLocalStorage();
+    return axios.post('/api/orderscomplete/',data)
+}
+
+export const postDeliveryOrder = (data)=>{
+    getTokenLocalStorage();
+    return axios.post('/api/deliveryOrder/',data)
+}
+
 
 // ----------------------------------------------------------------------------
 

@@ -16,11 +16,14 @@ import { useFloorData } from '../../context/FloorDataProvider';
 import VoucherView from './VoucherView';
 import { CashOrderContextProvider, useCashOrder } from '../../context/CashOrderContextProvider';
 import SplitView from './SplitView';
+import Waiter from './Waiter';
+import DeliverOrder from './DeliverOrder';
+import CashierDeliveryTable from './CashierDeliveryTable';
 
 const Cashier = () => {
 
 	const [showAdd, setShowAdd] = useState(false);
-	const [loading, setLoading] = useState(false);
+
 
 	const { floor_data, data: floors } = useFloorData();
 
@@ -32,11 +35,23 @@ const Cashier = () => {
 	const [showTable, setShowTable] = useState('Orders');
 	const [showSplitView, setShowSplitView] = useState(false);
 
-	const { orders_data, Orderdata, isCombine, setIsCombine, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher } = useContext(CashOrderContextProvider);
+	const [showWaiter, setShowWaiter] = useState(false);
+	const [showDelivery, setShowDelivery] = useState(false);
+
+	const { Orderdata, isCombine, setIsCombine, loading, setLoading, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher, setSelectedTable, saveAllVoucher } = useContext(CashOrderContextProvider);
+
+	const WaiterView = () => {
+		return <CustomModal open={showWaiter} setOpen={setShowWaiter} full title="Orders">
+			<Waiter />
+		</CustomModal>
+	}
+
 
 	return (
 		<div className="w-screen h-screen bg-gray-300 flex flex-col items-center ">
 			<Loading show={loading} setShow={setLoading} />
+			<WaiterView />
+			<DeliverOrder open={showDelivery} setOpen={setShowDelivery} />
 			<TopBar >
 				<div className="flex flex-row items-center">
 					<img src={IMAGE.cashier} style={{ width: 40 }} />
@@ -56,7 +71,7 @@ const Cashier = () => {
 						</select>
 					</div>
 
-					<button onClick={() => { setShowAdd(true); }} className="p-3 text-black border-gray-400 border rounded font-mono hover:bg-green-400">
+					<button onClick={() => { setShowDelivery(true); }} className="p-3 text-black border-gray-400 border rounded font-mono hover:bg-green-400">
 						<icon className="bi bi-plus-circle"></icon>	Delivery Order
 					</button>
 					{/* delete button */}
@@ -100,8 +115,13 @@ const Cashier = () => {
 						</div>
 
 					</div>
-					<CashierProductTable data={Orderdata} selectedRows={selectedRows} setSelectedRows={setSelectedRows} isCombine={isCombine} />
+					{showTable == "Orders" &&
+						<CashierProductTable data={Orderdata} selectedRows={selectedRows} setSelectedRows={setSelectedRows} isCombine={isCombine} setSelectedTable={setSelectedTable} />
+					}
+					{showTable == "Delivery" &&
+						<CashierDeliveryTable data={Orderdata} selectedRows={selectedRows} setSelectedRows={setSelectedRows} isCombine={isCombine} setSelectedTable={setSelectedTable} />
 
+					}
 				</div>
 				<div className='bg-white col-span-2 mx-2 mt-2'>
 					<div className="flex flex-row items-center mb-2">
@@ -122,7 +142,7 @@ const Cashier = () => {
 						}}>
 							<i class="bi bi-trash"></i> Delete</h1>
 
-						<h1 className={`text-md text-center p-2 border-b cursor-pointer  hover:border-b-2  hover:border-blue-500 ${Voucher.length >= 2 && 'border-b-2 border-blue-800'}`} onClick={() => {
+						<h1 className={`text-md text-center p-2 border-b cursor-pointer  hover:border-b-2  hover:border-blue-500 ${Voucher?.length >= 2 && 'border-b-2 border-blue-800'}`} onClick={() => {
 							setShowSplitView(true)
 
 						}}>
@@ -130,25 +150,26 @@ const Cashier = () => {
 
 
 						<h1 className={`text-md text-center p-2 border-b cursor-pointer hover:border-b-2  hover:border-blue-500`} onClick={() => {
-							setShowTable('Orders')
+							setShowWaiter(true);
 						}}>
 							<i class="bi bi-app"></i> New Orders</h1>
 						<h1 className={`text-md text-center p-2 border-b cursor-pointer hover:border-b-2  hover:border-blue-500`} onClick={() => {
-							setShowTable('Orders')
+							saveAllVoucher();
 						}}>
 							<i class="bi bi-memory"></i> Save All</h1>
 					</div>
 
 					<div className='flex flex-col overflow-y-auto'>
 						<div className='p-2 flex flex-col gap-2'>
-							{Voucher.map((Order, index) =>
-								<VoucherView data={Order} index={index} selectedRows={selectedRows} selectedVoucher={selectedVoucher} setSelectedVoucher={setSelectedVoucher} />
+							{Voucher?.map((Order, index) =>
+								<VoucherView data={Order} index={index} selectedRows={selectedRows} selectedVoucher={selectedVoucher} setSelectedVoucher={setSelectedVoucher} isDelivery={showTable=='Delivery'} />
 
 							)}
 						</div>
 					</div>
 				</div>
 			</div>
+
 			<div className="p-1 bg-yellow-200 w-full flex-row flex gap-2">
 
 			</div>

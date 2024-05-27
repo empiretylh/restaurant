@@ -63,6 +63,7 @@ class Product(models.Model):
     totalunit =  models.CharField(max_length=255, null=True, blank=True)
     isUnit = models.BooleanField(default=False)
     kitchen = models.ForeignKey(Kitchen, on_delete=models.CASCADE, null=True, blank=True)
+    profit = models.CharField(max_length=10, default=0)
 
 
     def __str__(self):
@@ -77,7 +78,7 @@ class FoodIntegrient(models.Model):
     useunit = models.CharField(max_length=30, null=False, blank=False)
 
     def __str__(self):
-        return self.food.name + ' ' + self.product.name
+        return  self.product.name
 
 class Food(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False)
@@ -89,6 +90,7 @@ class Food(models.Model):
     kitchen = models.ForeignKey(Kitchen, on_delete=models.CASCADE, null=True, blank=True)
     integrient = models.ManyToManyField(FoodIntegrient, related_name='integrient')
     isavaliable = models.BooleanField(default=True)
+    profit = models.CharField(max_length=10, default=0)
 
     def __str__(self):
         return self.name
@@ -113,7 +115,11 @@ class Order(PolymorphicModel):
     total_price = models.CharField(max_length=10)
     isCooking = models.BooleanField(default=False)
     isComplete = models.BooleanField(default=False)
+    isPaid = models.BooleanField(default=False)
     kitchen  = models.ForeignKey(Kitchen, on_delete=models.CASCADE, related_name="kitchens")
+    profit = models.CharField(max_length=10, default=0, null=True, blank=True)
+    discount = models.CharField(max_length=10, null=True, blank=True)
+    
 
 
     def __str__(self):
@@ -124,16 +130,30 @@ class FoodOrder(Order):
    
 class ProductOrder(Order):
     product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name="product")
+
+class DeliveryOrder(models.Model):
+    address =  models.TextField(null=True, blank=True)
+    phoneno = models.CharField(max_length=10, default='')
+    deliveryCharges = models.CharField(max_length=10, default=0)
+    customername =  models.CharField(max_length=10, default='')
+    exceptTime = models.DateTimeField(null=True, blank=True)
+    description =  models.TextField(null=True, blank=True)
+
    
 class OrderDetail(models.Model):
-    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="table_name")
-    waiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waiter")
+    table = models.ForeignKey(Table, null=True, blank=True, on_delete=models.SET_NULL, related_name="table_name")
+    waiter = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="waiter")
     product_orders = models.ManyToManyField(ProductOrder, related_name ="product_orders")
     food_orders = models.ManyToManyField(FoodOrder, related_name="food_orders")
     guest = models.CharField(max_length=5, default=1)
     date = models.DateTimeField(auto_now_add=True)
     is_paid = models.BooleanField(default=False)
     isOrder = models.BooleanField(default=False)
+    deliveryorder = models.ForeignKey(DeliveryOrder,null=True, blank=True, on_delete=models.CASCADE, related_name="delivery_orders")
+    isDelivery = models.BooleanField(default=False)
+
+    
+   
 
 class RealOrder(models.Model):
     order_time = models.DateTimeField(auto_now_add=True)
@@ -141,8 +161,31 @@ class RealOrder(models.Model):
     isFinish = models.BooleanField(default=False)
     start_cooking_time = models.DateTimeField(blank=True, null=True)
     end_cooking_time = models.DateTimeField(blank=True, null=True)
-    orders = models.ForeignKey(OrderDetail, on_delete=models.CASCADE)
+    orders = models.ForeignKey(OrderDetail, null=True, blank=True, on_delete=models.SET_NULL)
     isPaid = models.BooleanField(default=False)
+   
+    originaltotalPrice = models.CharField(max_length=10, null=True, blank=True)
+    totalProfit = models.CharField(max_length=10, null=True, blank=True)
+    
+    totalPayment = models.CharField(max_length=10, null=True, blank=True,default=0)
+    realProfit = models.CharField(max_length=10, null=True, blank=True, default=0)
+   
+
+class SaveVoucherHistory(models.Model):
+    customername =  models.CharField(max_length=100, null=True, blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+    order = models.ManyToManyField(RealOrder,null=True, blank=True)
+ 
+    originaltotalPrice = models.CharField(max_length=10, null=True, blank=True)
+    discount = models.CharField(max_length=10, null=True, blank=True)
+    delivery = models.CharField(max_length=10, null=True, blank=True)
+ 
+    totalPrice = models.CharField(max_length=10, null=True, blank=True)
+    totalPayment = models.CharField(max_length=10, null=True, blank=True)
+
+    payment_type =  models.CharField(max_length=10, default="Cash")
+    description =  models.TextField(default="")
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 
 
 

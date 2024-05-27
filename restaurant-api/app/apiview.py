@@ -44,6 +44,15 @@ from django.db.models import Q
 import json
 
 
+def convert_to_number(input_value):
+    if not input_value == None:
+        try:
+            return float(input_value)
+        except ValueError:
+            return 0
+    else:
+        return 0
+    
 def CHECK_IN_PLAN_AND_RESPONSE(user, data, **args):
     if user.is_plan:
         return Response('End Plan or No Purchase Plan')
@@ -57,7 +66,6 @@ class LoginView(APIView):
 
     permission_classes = [AllowAny]
 
-  
     def post(self, request, *args, **kwargs):
 
         print(request.data)
@@ -71,7 +79,6 @@ class LoginView(APIView):
         # user devices
         device = request.data.get('device', None)
 
-
         user = None
         if '@' in username_or_email:
             b = models.User.objects.get(email=username_or_email)
@@ -80,8 +87,8 @@ class LoginView(APIView):
         else:
             user = authenticate(username=username_or_email, password=password)
 
-        check_acc_type =   models.User.objects.get(username=user.username, acc_type=acc_type)
-
+        check_acc_type = models.User.objects.get(
+            username=user.username, acc_type=acc_type)
 
         if not user or not check_acc_type:
             return Response({'error': 'Invalid Credentials'},
@@ -108,8 +115,6 @@ class LoginView(APIView):
 
         return Response(response_data)
 
-    
-
 
 class CreateUserApiView(CreateAPIView):
 
@@ -131,7 +136,7 @@ class CreateUserApiView(CreateAPIView):
         user = models.User.objects.get(username=request.data.get('username'))
         # models.Device.objects.create(
         #     user=user, unique_id=device_unique, device_name=device_name, acc_type=acc_type)
-       
+
         token = Token.objects.create(user=serializers.instance)
         token_data = {'token': token.key}
 
@@ -139,6 +144,7 @@ class CreateUserApiView(CreateAPIView):
             {**serializers.data, **token_data},
             status=status.HTTP_201_CREATED,
             headers=headers)
+
 
 class CreateCompany(APIView):
 
@@ -149,22 +155,21 @@ class CreateCompany(APIView):
         address = request.data.get('address', None)
         logo = request.data.get('logo', None)
 
-
         user = get_user_model().objects.get(username=request.user)
         if user.acc_type == 'Admin':
             models.CompanyProfile.objects.create(
-            name=name, email=email, phoneno=phoneno, address=address, logo=logo)
+                name=name, email=email, phoneno=phoneno, address=address, logo=logo)
 
         return Response(status=status.HTTP_201_CREATED)
-    
-    def get(self,request):
+
+    def get(self, request):
         user = get_user_model().objects.get(username=request.user)
         data = models.CompanyProfile.objects.get(user=user)
         s = serializers.CompanyProfileSerializer(data)
 
         return Response(s.data)
 
-    def put(self,request):
+    def put(self, request):
         user = get_user_model().objects.get(username=request.user)
         data = models.CompanyProfile.objects.get(user=user)
 
@@ -186,6 +191,7 @@ class CreateCompany(APIView):
 
         return Response(s.data)
 
+
 class AccountsAPIView(APIView):
 
     def get(self, request):
@@ -194,17 +200,16 @@ class AccountsAPIView(APIView):
 
         return Response(s.data)
 
-    def put(self,request):
+    def put(self, request):
         username = request.data.get('username', None)
         user = models.User.objects.get(username=username)
-        user.phoneno = request.data.get('phoneno',user.phoneno)
-        user.acc_type =  request.data.get('acc_type', user.acc_type)
+        user.phoneno = request.data.get('phoneno', user.phoneno)
+        user.acc_type = request.data.get('acc_type', user.acc_type)
 
-        password = request.data.get('password',None)
+        password = request.data.get('password', None)
 
         if not password == None:
             user.set_password(password)
-
 
         user.save()
 
@@ -219,8 +224,6 @@ class AccountsAPIView(APIView):
             return Response(status=status.HTTP_200_OK)
 
 
-
-
 class KitchenAPIView(APIView):
     # permission_classes = [AllowAny]
 
@@ -229,37 +232,35 @@ class KitchenAPIView(APIView):
 
         s = serializers.KitchenSerializer(data, many=True)
 
-
         return Response(s.data)
 
     def post(self, request):
 
-        name =  request.data.get("name", None)
-        description = request.data.get("description",None)
+        name = request.data.get("name", None)
+        description = request.data.get("description", None)
 
-        models.Kitchen.objects.create(name=name, description=description) 
-
+        models.Kitchen.objects.create(name=name, description=description)
 
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        id =  request.GET.get('id',None)
+        id = request.GET.get('id', None)
         kt = models.Kitchen.objects.get(id=id)
         kt.delete()
 
         return Response(status=status.HTTP_200_OK)
 
     def put(self, request):
-        id =  request.data.get('id', None) 
+        id = request.data.get('id', None)
 
         kt = models.Kitchen.objects.get(id=id)
-        kt.name = request.data.get('name',kt.name)
-        kt.description = request.data.get('description',kt.description)
-
+        kt.name = request.data.get('name', kt.name)
+        kt.description = request.data.get('description', kt.description)
 
         kt.save()
 
         return Response(status=status.HTTP_200_OK)
+
 
 class password_recovery(APIView):
     permission_classes = [AllowAny]
@@ -382,11 +383,11 @@ class Category(APIView):
 
     def post(self, request):
         models.Category.objects.create(title=request.data['title'])
-        
+
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        id =  request.GET.get('id',None)
+        id = request.GET.get('id', None)
         user = get_user_model().objects.get(username=request.user)
         ct = models.Category.objects.get(id=id)
         ct.delete()
@@ -394,12 +395,10 @@ class Category(APIView):
         return Response(status=status.HTTP_200_OK)
 
     def put(self, request):
-        id =  request.data.get('id', None)
-
-      
+        id = request.data.get('id', None)
 
         ct = models.Category.objects.get(id=id)
-        ct.title = request.data.get('title',ct.title)
+        ct.title = request.data.get('title', ct.title)
         ct.show = request.data.get('show', ct.show)
 
         print(request.data.get('show'), ct.show)
@@ -430,25 +429,29 @@ class Product(APIView):
     def get(self, request):
 
         expiry_filter_type = request.GET.get('expiry_filter_type', None)
-        expiry_filter_day = request.GET.get('expiry_filter_day', None) #eg. 10 days, 5 days
-
+        expiry_filter_day = request.GET.get(
+            'expiry_filter_day', None)  # eg. 10 days, 5 days
 
         if not expiry_filter_day == None:
-            data = models.Product.objects.filter(expiry_date__range=[datetime.now(), datetime.now() + timedelta(days=int(expiry_filter_day))])
+            data = models.Product.objects.filter(expiry_date__range=[datetime.now(
+            ), datetime.now() + timedelta(days=int(expiry_filter_day))])
             s = serializers.ProductSerializer(data, many=True)
 
             return Response(s.data)
 
         if expiry_filter_type == 'expired':
-            data = models.Product.objects.filter( expiry_date__lt=datetime.now())
+            data = models.Product.objects.filter(
+                expiry_date__lt=datetime.now())
         elif expiry_filter_type == 'not_expired':
-            data = models.Product.objects.filter( expiry_date__gt=datetime.now())
+            data = models.Product.objects.filter(
+                expiry_date__gt=datetime.now())
         # filter this week expiry date
         elif expiry_filter_type == 'this_week':
-            data = models.Product.objects.filter(expiry_date__range=[datetime.now(), datetime.now() + timedelta(days=7)])
+            data = models.Product.objects.filter(
+                expiry_date__range=[datetime.now(), datetime.now() + timedelta(days=7)])
         else:
             data = models.Product.objects.all()
-            
+
         s = serializers.ProductSerializer(data, many=True)
         return Response(s.data)
 
@@ -465,29 +468,25 @@ class Product(APIView):
 
         expiry_date = request.data.get('expiry_date', None)
 
-        extraprice =  request.data.get('extraprice', None) #'4000, 5000, 6000'
-        unit =  request.data.get('unit',0)
-        kitchen = request.data.get('kitchen',None)
-        totalunit =  int(unit) * int(qty)
+        extraprice = request.data.get('extraprice', None)  # '4000, 5000, 6000'
+        unit = request.data.get('unit', 0)
+        kitchen = request.data.get('kitchen', None)
+        totalunit = int(unit) * int(qty)
 
         isunit = False
         if int(unit) >= 1:
             isunit = True
 
-
         kt = models.Kitchen.objects.get(id=kitchen)
-
-        
-
 
         md = models.Product.objects.create(
             name=name,  pic=pic, price=price,
             cost=cost, qty=qty, description=description,
             barcode=barcode,
-            category=category,expiry_date=expiry_date, 
+            category=category, expiry_date=expiry_date,
             unit=unit, totalunit=totalunit, isUnit=isunit,
-            kitchen = kt,
-            )
+            kitchen=kt,
+        )
 
         if not extraprice == None:
             extraprice = extraprice.split(',')
@@ -512,54 +511,51 @@ class Product(APIView):
 
     def put(self, request):
         id = request.data['id']
-       
-        pic = request.data.get('pic','null')
-     
+
+        pic = request.data.get('pic', 'null')
 
         print(request.data)
 
+        description = request.data.get('description', None)
 
-        description = request.data.get('description',None)
-        
-
-
-        PRODUCTS = models.Product.objects.get( id=id)
+        PRODUCTS = models.Product.objects.get(id=id)
         PRODUCTS.name = request.data.get('name', PRODUCTS.name)
         PRODUCTS.price = request.data.get('price', PRODUCTS.price)
         PRODUCTS.qty = request.data.get('qty', PRODUCTS.qty)
         PRODUCTS.cost = request.data.get('cost', PRODUCTS.cost)
         # PRODUCTS.date = date
-        PRODUCTS.description = request.data.get('description', PRODUCTS.description)
+        PRODUCTS.description = request.data.get(
+            'description', PRODUCTS.description)
 
         category = models.Category.objects.get(
-            id=request.data.get('category',PRODUCTS.category.id))
+            id=request.data.get('category', PRODUCTS.category.id))
 
         PRODUCTS.category = category
         PRODUCTS.barcode = request.data.get('barcode', PRODUCTS.barcode)
-        PRODUCTS.expiry_date = request.data.get('expiry_date',PRODUCTS.expiry_date)
+        PRODUCTS.expiry_date = request.data.get(
+            'expiry_date', PRODUCTS.expiry_date)
         PRODUCTS.unit = request.data.get('unit', PRODUCTS.unit)
         PRODUCTS.totalunit = int(PRODUCTS.unit) * int(PRODUCTS.qty)
 
         kt = models.Kitchen.objects.get(
             id=request.data.get('kitchen', PRODUCTS.kitchen.id)
-            )
+        )
 
         PRODUCTS.kitchen = kt
-        extraprice =  request.data.get('extraprice', None) #'4000, 5000, 6000'
+        extraprice = request.data.get('extraprice', None)  # '4000, 5000, 6000'
 
         if not extraprice == None:
             # delete all releated product from ProductPrice
             models.ProductPrice.objects.filter(pdid=PRODUCTS).delete()
-            
+
             extraprice = extraprice.split(',')
             for p in extraprice:
                 models.ProductPrice.objects.create(pdid=PRODUCTS, extraprice=p)
-        
+
         try:
             img = Image.open(pic)
         except FileNotFoundError:
             pic = 'null'
-         
 
         if not pic == 'null':
             PRODUCTS.pic = compress_image(pic)
@@ -572,14 +568,14 @@ class Product(APIView):
         print(request.data)
         id = request.data['id']
 
-        PRODUCTS = models.Product.objects.get( id=id)
+        PRODUCTS = models.Product.objects.get(id=id)
         PRODUCTS.delete()
         return Response(status=status.HTTP_201_CREATED)
 
 
 def calculateFoodQtyByProductUseUnit():
     food = models.Food.objects.all()
-    
+
     for f in food:
         integrient = f.integrient.all()
 
@@ -587,10 +583,10 @@ def calculateFoodQtyByProductUseUnit():
 
         for i in integrient:
             pd = models.Product.objects.get(id=i.product.id)
-            print(pd.name , pd.qty, pd.totalunit, i.useunit)
+            print(pd.name, pd.qty, pd.totalunit, i.useunit)
 
-            list.append(int(int(pd.totalunit) / int( i.useunit)
-            ))
+            list.append(int(int(pd.totalunit) / int(i.useunit)
+                            ))
         print("One Food .....................................")
         print(list)
         # get mininum value from list
@@ -603,31 +599,28 @@ def calculateFoodQtyByProductUseUnit():
             print(f.qty)
 
 
-
-
 class FoodAPIView(APIView):
     def get(self, request):
         calculateFoodQtyByProductUseUnit()
         food = models.Food.objects.all()
-        s =  serializers.FoodSerializer(food, many=True)
+        s = serializers.FoodSerializer(food, many=True)
 
         return Response(s.data)
 
     def post(self, request):
-        name = request.data.get("name","Unkown")
-        price = request.data.get("price",0)
-        qty = request.data.get("qty",0)
-        description = request.data.get('description',None)
+        name = request.data.get("name", "Unkown")
+        price = request.data.get("price", 0)
+        qty = request.data.get("qty", 0)
+        description = request.data.get('description', None)
         category = request.data.get('category', 0)
 
         pic = request.data.get('pic', 'null')
         kitchen = request.data.get('kitchen', None)
-        integrient = request.data.get('integrient', []) # pdid , unit
+        integrient = request.data.get('integrient', [])  # pdid , unit
         avaliable = request.data.get('avaliable', True)
 
         inte_raw = json.loads(integrient)
 
-      
         kt = models.Kitchen.objects.get(id=kitchen)
 
         if avaliable == 'true':
@@ -637,22 +630,32 @@ class FoodAPIView(APIView):
 
         categ = models.Category.objects.get(id=category)
 
-         # Customer.sales.add(S)
+        # Customer.sales.add(S)
         FOOD = models.Food.objects.create(name=name, price=price,
-                                     qty=qty, description=description,
-                                     isavaliable=avaliable,
-                                     category=categ, kitchen=kt)
+                                          qty=qty, description=description,
+                                          isavaliable=avaliable,
+                                          category=categ, kitchen=kt)
 
         if not pic == 'null':
             FOOD.pic = compress_image(pic)
             FOOD.save()
-        
+
+        foodcost = 0
+
         for product in inte_raw:
             pd = models.Product.objects.get(id=product['id'])
-            fdinte = models.FoodIntegrient.objects.create(product=pd, useunit=product['useunit'])
+            fdinte = models.FoodIntegrient.objects.create(
+                product=pd, useunit=product['useunit'])
+
+            foodcost += int(float(fdinte.useunit)) / \
+                int(float(pd.unit)) * int(float(pd.cost))
 
             FOOD.integrient.add(fdinte)
             FOOD.save()
+
+        totalProfit = int(FOOD.price) - int(foodcost)
+
+        FOOD.profit = totalProfit
 
         FOOD.save()
 
@@ -660,20 +663,18 @@ class FoodAPIView(APIView):
 
     def put(self, request):
 
-        id = request.data.get('id',None)
-       
+        id = request.data.get('id', None)
+
         integrient = request.data.get('integrient', None)
 
         print(request.data.get('id'))
 
-        
-
         FOOD = models.Food.objects.get(id=id)
 
-        FOOD.name = request.data.get("name",FOOD.name)
-        FOOD.price = request.data.get("price",FOOD.price)
-        FOOD.qty = request.data.get("qty",FOOD.qty)
-        FOOD.description = request.data.get('description',FOOD.description)
+        FOOD.name = request.data.get("name", FOOD.name)
+        FOOD.price = request.data.get("price", FOOD.price)
+        FOOD.qty = request.data.get("qty", FOOD.qty)
+        FOOD.description = request.data.get('description', FOOD.description)
         category = request.data.get("category", FOOD.category.id)
         cat = models.Category.objects.get(id=category)
         FOOD.category = cat
@@ -693,19 +694,25 @@ class FoodAPIView(APIView):
 
         FOOD.save()
 
-
         if not integrient == None:
             inte_raw = json.loads(integrient)
 
             FOOD.integrient.clear()
-
+            foodcost = 0
             for product in inte_raw:
                 pd = models.Product.objects.get(id=product['id'])
-                fdinte = models.FoodIntegrient.objects.create(product=pd, useunit=product['useunit'])
-
+                fdinte = models.FoodIntegrient.objects.create(
+                    product=pd, useunit=product['useunit'])
+                foodcost += int(float(fdinte.useunit)) / \
+                    int(float(pd.unit)) * int(float(pd.cost))
                 FOOD.integrient.add(fdinte)
                 FOOD.save()
-        
+
+            totalProfit = int(FOOD.price) - int(foodcost)
+
+            FOOD.profit = totalProfit
+            FOOD.save()
+
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
@@ -715,6 +722,7 @@ class FoodAPIView(APIView):
             FOOD = models.Food.objects.get(id=id)
             FOOD.delete()
         return Response(status=status.HTTP_201_CREATED)
+
 
 class FloorAPIView(APIView):
     def get(self, request):
@@ -780,18 +788,16 @@ class TableAPIView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
-    
-from django.core.exceptions import ObjectDoesNotExist
 
 def handle_foodOrder_element(Order, item, qty):
     total_price = int(qty) * int(item.price)
 
     try:
-        orderelement = Order.food_orders.get(food=item, isCooking=False, isComplete=False)
+        orderelement = Order.food_orders.get(
+            food=item, isCooking=False, isComplete=False)
         orderelement.qty = int(orderelement.qty) + int(qty)
         orderelement.total_price = int(item.price) * int(orderelement.qty)
-        orderelement.isComplete =False
-
+        orderelement.isComplete = False
 
         # If the quantity becomes zero, delete the order element
         if orderelement.qty == 0:
@@ -801,7 +807,8 @@ def handle_foodOrder_element(Order, item, qty):
     except ObjectDoesNotExist:
         # If the quantity is zero, don't create a new order element
         if qty != 0:
-            orderelement = models.FoodOrder.objects.create(food=item, qty=qty, total_price=total_price, kitchen=item.kitchen)
+            orderelement = models.FoodOrder.objects.create(
+                food=item, qty=qty, total_price=total_price, kitchen=item.kitchen)
             Order.food_orders.add(orderelement)
 
     Order.save()
@@ -814,7 +821,7 @@ def handle_productOrder_element(Order, item, qty):
         orderelement = Order.product_orders.get(product=item)
         orderelement.qty = int(orderelement.qty) + int(qty)
         orderelement.total_price = int(item.price) * int(orderelement.qty)
-        orderelement.isComplete =False
+        orderelement.isComplete = False
 
         # If the quantity becomes zero, delete the order element
         if orderelement.qty == 0:
@@ -824,12 +831,60 @@ def handle_productOrder_element(Order, item, qty):
     except ObjectDoesNotExist:
         # If the quantity is zero, don't create a new order element
         if qty != 0:
-            orderelement = models.ProductOrder.objects.create(product=item, qty=qty, total_price=total_price, kitchen=item.kitchen)
+            orderelement = models.ProductOrder.objects.create(
+                product=item, qty=qty, total_price=total_price, kitchen=item.kitchen)
             Order.product_orders.add(orderelement)
 
     Order.save()
 
-    
+
+class DeliveryOrderAPIView(APIView):
+
+    def post(self, request):
+        product_id = request.data.get('pdid')
+        qty = request.data.get('qty', 1)
+        is_product = request.data.get('ispd', True)
+
+        is_Delivery = request.data.get('isDelivery',True)
+        customername = request.data.get('name','')
+        address = request.data.get('address','')
+        phoneno = request.data.get('phone','')
+        except_time = request.data.get('datetime',None)
+        description = request.data.get('description','')
+        deliveryCharges = request.data.get('deliveryCharges',0)
+        description = request.data.get('description','')
+
+        DeliveryOrder, delivery_created = models.DeliveryOrder.objects.get_or_create(
+                                            customername=customername,
+                                            address=address,
+                                            deliveryCharges=deliveryCharges,
+                                            exceptTime=except_time,
+                                            phoneno=phoneno,
+                                            description=description
+                                        )
+
+        Order, order_created = models.OrderDetail.objects.get_or_create(
+                                            isDelivery=is_Delivery,
+                                            deliveryorder=DeliveryOrder
+                                        )
+        Order.isOrder = False
+        Order.save()
+
+        if is_product:
+            item = get_object_or_404(models.Product, id=product_id)
+            handle_productOrder_element(Order, item, qty)
+        else:
+            item = get_object_or_404(models.Food, id=product_id)
+            handle_foodOrder_element(Order, item, qty)
+
+
+        try:
+            realorder = models.RealOrder.objects.get(orders=Order)
+
+        except ObjectDoesNotExist:
+            realorder = models.RealOrder.objects.create(orders=Order)
+          
+        return Response(status=status.HTTP_200_OK)
 
 class OrderAPIView(APIView):
 
@@ -837,14 +892,15 @@ class OrderAPIView(APIView):
         table_id = request.GET.get('table_id')
         table = models.Table.objects.get(id=table_id)
 
-        PdOrder = models.OrderDetail.objects.filter(table=table, is_paid=False).order_by('-id')
+        PdOrder = models.OrderDetail.objects.filter(
+            table=table, is_paid=False).order_by('-id')
 
         ser = serializers.OrderDetailsSerializer(PdOrder.first())
 
         return Response(ser.data)
 
-
     def post(self, request):
+        print("request.data", request.data)
         table_id = request.data.get('table_id')
         waiter = request.user
         table = get_object_or_404(models.Table, id=table_id)
@@ -853,21 +909,22 @@ class OrderAPIView(APIView):
         qty = request.data.get('qty', 1)
         is_product = request.data.get('ispd', True)
 
-        PdOrder = models.OrderDetail.objects.filter(table=table, waiter=waiter, is_paid=False).order_by('-id')
+        PdOrder = models.OrderDetail.objects.filter(
+            table=table, is_paid=False).order_by('-id')
 
         if PdOrder.exists():
             Order = PdOrder.first()
             Order.isOrder = False
-            Order.save()
+            Order.save()    
             table.status = True
             table.save()
         else:
-            Order = models.OrderDetail.objects.create(table=table, waiter=waiter)
+            Order = models.OrderDetail.objects.create(
+                table=table, waiter=waiter)
             Order.isOrder = False
             Order.save()
             table.status = True
             table.save()
-
 
         if is_product:
             item = get_object_or_404(models.Product, id=product_id)
@@ -880,13 +937,14 @@ class OrderAPIView(APIView):
         return Response(ser.data)
 
     def delete(self, request):
-        table_id =  request.GET.get('table_id')
-        print(table_id  )
+        table_id = request.GET.get('table_id')
+        print(table_id)
         table = get_object_or_404(models.Table, id=table_id)
 
         waiter = request.user
 
-        PdOrder = models.OrderDetail.objects.filter(table=table, waiter=waiter, is_paid=False).order_by('-id')
+        PdOrder = models.OrderDetail.objects.filter(
+            table=table, waiter=waiter, is_paid=False).order_by('-id')
 
         if PdOrder.exists():
             Order = PdOrder.first()
@@ -898,7 +956,7 @@ class OrderAPIView(APIView):
 
     def put(self, request):
         itemOrderid = request.data.get('itemorderid')
-        isDone =  request.data.get('isDone', True)
+        isDone = request.data.get('isDone', True)
 
         print(itemOrderid, isDone)
 
@@ -907,6 +965,7 @@ class OrderAPIView(APIView):
         order.save()
 
         return Response(status=status.HTTP_200_OK)
+
 
 class SendOrder(APIView):
 
@@ -920,20 +979,21 @@ class SendOrder(APIView):
         this_week_start = today - timedelta(days=today.weekday())
         this_year_start = today.replace(month=1, day=1)
 
-
         if time == 'today':
             Orders = models.RealOrder.objects.filter(order_time__date=today)
         elif time == 'week':
-            Orders = models.RealOrder.objects.filter(order_time__date__gte=this_week_start)
+            Orders = models.RealOrder.objects.filter(
+                order_time__date__gte=this_week_start)
         elif time == 'month':
-            Orders = models.RealOrder.objects.filter(order_time__date__gte=this_month_start)
+            Orders = models.RealOrder.objects.filter(
+                order_time__date__gte=this_month_start)
         elif time == 'year':
-            Orders = models.RealOrder.objects.filter(order_time__date__gte=this_year_start)
+            Orders = models.RealOrder.objects.filter(
+                order_time__date__gte=this_year_start)
 
-        ser = serializers.RealOrderSerializer(Orders,many=True)
+        ser = serializers.RealOrderSerializer(Orders, many=True)
 
         return Response(ser.data)
-
 
     def post(self, request):
         orderdetail_id = request.data.get('order_id')
@@ -941,90 +1001,208 @@ class SendOrder(APIView):
         Order.isOrder = True
         Order.save()
         try:
-            realorder =  models.RealOrder.objects.get(orders=Order)
-            print("Notfiying the chef..............................................")
+            realorder = models.RealOrder.objects.get(orders=Order)
 
         except ObjectDoesNotExist:
             realorder = models.RealOrder.objects.create(orders=Order)
 
         return Response(status=status.HTTP_200_OK)
 
-    #.................. start cooking........................
+    # .................. start cooking........................
     def put(self, request):
         realorder = request.data.get('id')
-        put_type = request.data.get('type', 'cook') #cook, finish
+        put_type = request.data.get('type', 'cook')  # cook, finish
         kitchen = request.data.get('kitchen', 1)
 
         realorder = models.RealOrder.objects.get(id=realorder)
         if put_type == 'cook':
-            realorder.isCooking = True 
+            realorder.isCooking = True
             for fd in realorder.orders.food_orders.all():
                 if fd.kitchen == kitchen:
                     if not fd.isCooking:
-                        fd.isCooking = True 
+                        fd.isCooking = True
                     fd.save()
 
             for pd in realorder.orders.product_orders.all():
-                if fd.kitchen == kitchen:
-                    if not fd.isCooking:
-                        pd.isCooking = True 
+                if pd.kitchen == kitchen:
+                    if not pd.isCooking:
+                        pd.isCooking = True
                     pd.save()
 
             now = datetime.now()
-            realorder.start_cooking_time = now 
+            realorder.start_cooking_time = now
             realorder.save()
-
 
         if put_type == 'finish':
             realorder.isFinish = True
             for fd in realorder.orders.food_orders.all():
-                fd.isComplete = True 
+                fd.isComplete = True
                 fd.save()
 
             for pd in realorder.orders.product_orders.all():
-                pd.isComplete = True 
+                pd.isComplete = True
                 pd.save()
 
             now = datetime.now()
-            realorder.end_cooking_time = now 
+            realorder.end_cooking_time = now
 
             realorder.save()
-
 
         return Response(status=status.HTTP_200_OK)
 
 
+def ComputeProductItemFood(food, qty):
+    Food = food
+    print(food.qty)
+
+    for f in Food.integrient.all():
+        pd = f.product
+        totalProductUnit = pd.totalunit
+
+        pd.totalunit = int(totalProductUnit) - int((int(f.useunit) * int(qty)))
+
+        pd.qty = int(int(float(pd.totalunit)) / int(float(pd.unit)))
+
+        pd.save()
+
+def ComputeProductItemProduct(product, qty):
+    pd = product
+    minusunit = int(pd.unit) * int(pd.qty)
+    
+    pd.totalunit = int(pd.totalunit) - int(minusunit)
+    pd.qty = int(int(float(pd.totalunit)) / int(float(pd.unit)))
+    pd.save()
 
 
+class ItemDiscountAPIView(APIView):
+
+    def post(self, request):
+        print('item discount', request.data)
+        item_ids = request.data.get('item_id', [])
+        discount = request.data.get('discount')
+
+        if not item_ids or discount is None:
+            return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Assuming the discount is a valid value and the item_ids are valid
+        for item_id in item_ids:
+            try:
+                order = models.Order.objects.get(id=item_id)
+                order.discount = discount
+                order.save()
+            except models.Order.DoesNotExist:
+                # Handle the case where an item does not exist, if necessary
+                continue
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class OrderCompleteAPIView(APIView):
     def post(self, request):
-        table_id = request.data.get('table_id')
-        waiter = request.user
-        table = get_object_or_404(models.Table, id=table_id)
+        print("request.data",request.data)
+        order_ids = request.data.get('order_ids',[])
+        table_ids = request.data.get('table_ids',[])
+
+        customername = request.data.get('customername','Unknown')
+        payment_type = request.data.get('paymentype','Cash')
+        description = request.data.get('description','')
+        totalWillPayPrice =  request.data.get('totalPrice',0)
+        isDelivery = request.data.get('isDelivery', False)
 
 
-        PdOrder = models.OrderDetail.objects.filter(table=table, waiter=waiter, is_paid=False).order_by('-id')
+        totalPayment = request.data.get('totalPayment',totalWillPayPrice)
 
-        PdOrder.is_paid = True
-        table.status = False
-        PdOrder.save()
-        table.save()
+        discount = request.data.get('discount',0)
+        deliveryCharges =  request.data.get('delivery',0)
+
+        if not isDelivery:
+            if not table_ids or not order_ids:
+                return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+
+            
+
+        SVH  = models.SaveVoucherHistory.objects.create(customername=customername,
+                                    payment_type=payment_type,
+                                    description=description,
+                                    originaltotalPrice=totalWillPayPrice,
+                                    delivery=deliveryCharges,
+                                    discount=discount,
+                                    totalPayment=totalPayment)
+
+        SVH.totalPrice = int(SVH.originaltotalPrice) - discountCalculatorWithPerctange(self,SVH.originaltotalPrice,discount)
+        SVH.save()
+
+        orderPayment = int(SVH.totalPayment) / len(order_ids)
+        
+        
+        for order_id in order_ids:
+            realOrder = models.RealOrder.objects.get(id=order_id)
+          
+
+            SVH.order.add(realOrder)
+
+            totalPrice = 0
+            totalProfit = 0
+
+            for food_order in realOrder.orders.food_orders.all():
+                salePriceWithDiscount = int(food_order.food.price) - discountCalculatorWithPerctange(self, food_order.food.price, food_order.discount)
+                OriginalProfit = food_order.food.profit
+
+                BuyPrice = int(food_order.food.price) - int(OriginalProfit)
+                SaleProfit = int(salePriceWithDiscount) - int(BuyPrice)
+
+                print(OriginalProfit, "Originalprofit", salePriceWithDiscount, SaleProfit)
+
+                totalPrice += int(salePriceWithDiscount) * int(food_order.qty)
+                totalProfit += int(SaleProfit) * int(food_order.qty)
+                ComputeProductItemFood(food_order.food,food_order.qty)
+                food_order.isPaid = True
+                food_order.save()
+
+            for product_order in realOrder.orders.product_orders.all():
+                pd = product_order.product
+                salePriceWithDiscount = int(pd.price) -  discountCalculatorWithPerctange(self, product_order.product.price, product_order.discount)
+                SaleProfit = int(salePriceWithDiscount) - int(pd.cost)
+                totalPrice += int(salePriceWithDiscount) * int(product_order.qty)
+                totalProfit += int(SaleProfit) * int(product_order.qty)
+                ComputeProductItemProduct(pd, product_order.qty)
+                product_order.isPaid = True
+                product_order.save()
+                       
+            realOrder.originaltotalPrice = totalPrice
+            realOrder.totalProfit = totalProfit
+            
+            if not realOrder.totalPayment == None:
+                realOrder.totalPayment = int(float(realOrder.totalPayment)) + int(float(orderPayment))
+           
+            realProfit = (convert_to_number(realOrder.totalProfit) + convert_to_number(realOrder.totalPayment)) - int(convert_to_number(realOrder.originaltotalPrice))
+            realOrder.realProfit =  realProfit
+            realOrder.isPaid = True
+            realOrder.save()
+        
+        SVH.save()
+                
+        if not isDelivery:
+            for table_id in table_ids:
+                table = get_object_or_404(models.Table, id=table_id)
+                PdOrder = models.OrderDetail.objects.filter(
+                                table=table).order_by('-id').first()
+                PdOrder.is_paid = True
+                table.status = False
+                PdOrder.save()
+                table.save()
+        
 
         return Response(status=status.HTTP_201_CREATED)
 
-    def delete(self,request):
+    def delete(self, request):
         table_id = request.data.get('table_id')
         table = get_object_or_404(models.Table, id=table_id)
 
-        table.status =  False
+        table.status = False
         table.save()
 
         return Response(status=status.HTTP_200_OK)
-
-
-
 
 
 class ProductPriceChangeWithPercentage(APIView):
@@ -1043,7 +1221,7 @@ class ProductPriceChangeWithPercentage(APIView):
                 if product.price is not None and minus_percentage is not None:
                     minus_percentage = int(float(minus_percentage))
                     new_price = round(
-                        int(float(product.price)) - (int(float(product.price)) * int(float(minus_percentage)) / 100), 2) 
+                        int(float(product.price)) - (int(float(product.price)) * int(float(minus_percentage)) / 100), 2)
                     product.price = int(new_price)
                     product.save()
 
@@ -1052,7 +1230,7 @@ class ProductPriceChangeWithPercentage(APIView):
             for product in products:
                 if product.price is not None and plus_percentage is not None:
                     new_price = round(
-                        int(float(product.price)) + (int(float(product.price)) * int(float(plus_percentage)) / 100), 2)   
+                        int(float(product.price)) + (int(float(product.price)) * int(float(plus_percentage)) / 100), 2)
                     product.price = int(new_price)
                     product.save()
 
@@ -1154,21 +1332,29 @@ def taxCalculatorWithPerctange(self, price, tax_percentage):
 
 
 def discountCalculatorWithPerctange(self, price, discount_value, isDiscountAmount=False):
+    
+    if not discount_value :
+        discount_value = 0
+
     if isDiscountAmount:
         return int(float(price) - float(discount_value))
 
     discount_value = float(discount_value)
     discount = round((float(price) * discount_value / 100), 2)
+
+    print("Discount " , price, discount_value, discount)
     return discount
 
+
 def checkiinclude(id, soldproducts):
-        if not soldproducts == None:
-            for i in soldproducts:
-                if i['name'] == id:
-                    return True
-                print(i['name'])
-            return False
-        return True
+    if not soldproducts == None:
+        for i in soldproducts:
+            if i['name'] == id:
+                return True
+            print(i['name'])
+        return False
+    return True
+
 
 class Sales(APIView):
     # permission_classes = [AllowAny]P
@@ -1234,13 +1420,15 @@ class Sales(APIView):
         grandtotal = request.data['grandtotal']
         description = request.data['description']
         deliveryCharges = request.data.get('deliveryCharges', None)
-        payment_amount =  request.data.get('payment_amount',None)
-        isSaveCustomer = request.data.get('isSaveCustomer', 'false').lower() == 'true'
-        isDiscountAmount = request.data.get('isDiscountAmount', 'false').lower() == 'true'
+        payment_amount = request.data.get('payment_amount', None)
+        isSaveCustomer = request.data.get(
+            'isSaveCustomer', 'false').lower() == 'true'
+        isDiscountAmount = request.data.get(
+            'isDiscountAmount', 'false').lower() == 'true'
 
         # receiptnumber from sales table and plus one
 
-        print(isDiscountAmount,"Discount amount")
+        print(isDiscountAmount, "Discount amount")
 
         user = get_user_model().objects.get(username=request.user, is_plan=True)
         last = models.Sales.objects.filter(user=user).last()
@@ -1254,10 +1442,10 @@ class Sales(APIView):
         #     isDiscountAmount = True
 
         S = models.Sales.objects.create(user=user, customerName=customerName, voucherNumber=rn,
-                                        totalAmount=totalAmount, tax=tax, discount=discount, grandtotal=grandtotal,customer_payment=payment_amount,
-                                        deliveryCharges=deliveryCharges, isDiscountAmount = isDiscountAmount,
+                                        totalAmount=totalAmount, tax=tax, discount=discount, grandtotal=grandtotal, customer_payment=payment_amount,
+                                        deliveryCharges=deliveryCharges, isDiscountAmount=isDiscountAmount,
                                         description=description)
-        
+
         S.save()
 
         print(products)
@@ -1330,14 +1518,14 @@ class Sales(APIView):
 
         # S.totalProfit = totalProfit - taxCalculatorWithPerctange(self, totalProfit, S.tax)
         S.totalProfit = totalProfit - \
-            discountCalculatorWithPerctange(self, totalAmount, S.discount, isDiscountAmount)
-        
+            discountCalculatorWithPerctange(
+                self, totalAmount, S.discount, isDiscountAmount)
 
         S.save()
 
         saleseri = serializers.SalesSerializer(S)
 
-        if isSaveCustomer : # == 'true':
+        if isSaveCustomer:  # == 'true':
             try:
                 Customer = models.CustomerName.objects.get(
                     name=customerName, user=user)
@@ -1376,22 +1564,19 @@ class Sales(APIView):
     # if user increase product qty then it will be decrease from the Product models qty and if user decrease product qty then it will be increase from the Product models qty
     # then it will be updated in the SoldProduct Database
 
-    
-
     def put(self, request):
         print(request.data)
-        id = request.data['id'] # receipt Number
+        id = request.data['id']  # receipt Number
         user = get_user_model().objects.get(username=request.user, is_plan=True)
-        products = request.data['products'] # old products
+        products = request.data['products']  # old products
 
-        soldproducts =  request.data.get('newproducts',None)
+        soldproducts = request.data.get('newproducts', None)
 
         S = models.Sales.objects.get(user=user, receiptNumber=id)
         isSaveCustomer = True
 
         if float(S.customer_payment) == float(S.grandtotal):
             isSaveCustomer = False
-
 
         S.customerName = request.data.get('customerName', S.customerName)
      #   S.totalAmount = totalAmount
@@ -1405,18 +1590,17 @@ class Sales(APIView):
 
         currentSoldProduct = models.SoldProduct.objects.filter(
             sales=S, user=user)
-        
+
         ta = 0  # total amount
         pf = 0  # total profit
 
-       
-            # return Response(status=status.HTTP_201_CREATED)
+        # return Response(status=status.HTTP_201_CREATED)
 
         for currentProduct in currentSoldProduct:
             found = False
             print(currentProduct.id, "Current Product id")
             for editedProduct in editedProducts:
-                
+
                 if currentProduct.id == editedProduct['id']:
                     found = True
                     product = models.Product.objects.get(
@@ -1436,23 +1620,23 @@ class Sales(APIView):
                            float(product.cost)) * float(editedProduct['qty'])
                     ta += (float(currentProduct.price)) * \
                         float(editedProduct['qty'])
-                    print(editedProduct['qty'], 'Changing edited product : ', ta)
+                    print(editedProduct['qty'],
+                          'Changing edited product : ', ta)
 
                     currentProduct.profit = (
                         float(currentProduct.price) - float(product.cost)) * float(editedProduct['qty'])
                     currentProduct.save()
 
                     break
-            
+
             # check = checkiinclude(currentProduct.productid , soldproducts)
             # if check:
             if not found:
                 product = models.Product.objects.get(
                     id=currentProduct.productid, user=user)
-                product.qty =int(product.qty) + int(currentProduct.qty)
+                product.qty = int(product.qty) + int(currentProduct.qty)
                 product.save()
                 currentProduct.delete()
-          
 
         if not soldproducts == None:
             for newpd in soldproducts:
@@ -1461,22 +1645,19 @@ class Sales(APIView):
                 pd.save()
 
                 profit = (float(newpd['price']) -
-                              float(pd.cost)) * float(newpd['qty'])
+                          float(pd.cost)) * float(newpd['qty'])
 
                 ta += (float(pd.price)) * float(newpd['qty'])
 
                 a = models.SoldProduct.objects.create(
-                        name=pd.name, price=newpd['price'], qty=newpd['qty'],
-                        productid=pd.id, profit=profit, sales=S, user=user)
-                
-                print(a,"Succes")
-                
+                    name=pd.name, price=newpd['price'], qty=newpd['qty'],
+                    productid=pd.id, profit=profit, sales=S, user=user)
+
+                print(a, "Succes")
+
                 # ta += float(S.totalAmount)
                 pf += profit
                 S.save()
-
-        
-    
 
         S.totalAmount = ta
         S.grandtotal = ta + taxCalculatorWithPerctange(self, ta, S.tax) - discountCalculatorWithPerctange(
@@ -1486,7 +1667,8 @@ class Sales(APIView):
             S.customer_payment = S.grandtotal
 
         S.totalProfit = pf - \
-            discountCalculatorWithPerctange(self, ta, S.discount, S.isDiscountAmount)
+            discountCalculatorWithPerctange(
+                self, ta, S.discount, S.isDiscountAmount)
         S.save()
 
         return Response(status=status.HTTP_201_CREATED)
@@ -1505,21 +1687,20 @@ class CustomerView(APIView):
         customer_name = request.data.get('customerName', None)
         description = request.data.get('description', None)
         user = get_user_model().objects.get(username=request.user)
-        cu = models.CustomerName.objects.create(name=customer_name, description=description,user=user)
+        cu = models.CustomerName.objects.create(
+            name=customer_name, description=description, user=user)
         return Response(status=status.HTTP_201_CREATED)
 
-    def put(self,request):
-        sale_id =  request.data.get('sale_id',None)
-        customer_payment =  request.data.get('customer_payment',None)
+    def put(self, request):
+        sale_id = request.data.get('sale_id', None)
+        customer_payment = request.data.get('customer_payment', None)
 
         user = get_user_model().objects.get(username=request.user, is_plan=True)
 
-
-        #add sales to customer
+        # add sales to customer
         customer_id = request.data.get("customer_id", None)
-        sales_receipt =  request.data.get('sales', None)
+        sales_receipt = request.data.get('sales', None)
 
-        
         # sales data have only saleReceiptNumber [1, 4, 6, 0]
 
         if not sales_receipt == None:
@@ -1527,22 +1708,23 @@ class CustomerView(APIView):
 
             for sale in sales_receipt:
                 S = models.Sales.objects.get(user=user, receiptNumber=sale)
-                S.customer_payment = 0;
+                S.customer_payment = 0
                 S.save()
                 C.sales.add(S)
                 C.save()
-            
+
                 # Customer Set Payment
         if not sale_id == None:
             if not customer_payment == 0:
                 S = models.Sales.objects.get(user=user, receiptNumber=sale_id)
-                S.customer_payment = int(S.customer_payment) + int(customer_payment)
+                S.customer_payment = int(
+                    S.customer_payment) + int(customer_payment)
                 S.save()
 
         id = request.data.get('id', None)
         name = request.data.get('name', None)
         description = request.data.get('description', None)
-        
+
         if not id == None:
             C = models.CustomerName.objects.get(id=id)
             C.name = name
@@ -1551,10 +1733,10 @@ class CustomerView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
-    def delete(self,request):
+    def delete(self, request):
 
         customer_id = request.GET.get("customerid", None)
-        sales_receipt =  request.GET.get('sales', None)
+        sales_receipt = request.GET.get('sales', None)
 
         user = get_user_model().objects.get(username=request.user, is_plan=True)
 
@@ -1562,14 +1744,14 @@ class CustomerView(APIView):
 
         if not sales_receipt == None:
             C = models.CustomerName.objects.get(id=customer_id)
-            S = models.Sales.objects.get(user=user,receiptNumber=sales_receipt)
+            S = models.Sales.objects.get(
+                user=user, receiptNumber=sales_receipt)
             S.save()
             C.sales.remove(S)
             C.save()
         else:
             C = models.CustomerName.objects.get(id=customer_id)
             C.delete()
-
 
         return Response(status=status.HTTP_200_OK)
 
@@ -1586,21 +1768,19 @@ class SupplierView(APIView):
         supplier_name = request.data.get('supplierName', None)
         description = request.data.get('description', None)
         user = get_user_model().objects.get(username=request.user)
-        cu = models.Supplier.objects.create(name=supplier_name, description=description,user=user)
+        cu = models.Supplier.objects.create(
+            name=supplier_name, description=description, user=user)
         return Response(status=status.HTTP_201_CREATED)
 
-    def put(self,request):
-        product_id =  request.data.get('product_id',None)
-        supplier_payment =  request.data.get('supplier_payment',None)
+    def put(self, request):
+        product_id = request.data.get('product_id', None)
+        supplier_payment = request.data.get('supplier_payment', None)
 
         user = get_user_model().objects.get(username=request.user, is_plan=True)
 
-
-        #add sales to customer
+        # add sales to customer
         supplier_id = request.data.get("supplier_id", None)
-        productss =  request.data.get('products', None)
-
-        
+        productss = request.data.get('products', None)
 
         # productss data have only saleReceiptNumber [1, 4, 6, 0]
 
@@ -1609,22 +1789,23 @@ class SupplierView(APIView):
 
             for pd_id in productss:
                 product = models.Product.objects.get(user=user, id=pd_id)
-                product.supplier_payment = 0;
+                product.supplier_payment = 0
                 product.save()
                 C.products.add(product)
                 C.save()
-            
+
         # Customer Set Payment
         if not product_id == None:
             if not supplier_payment == 0:
                 S = models.Product.objects.get(id=product_id)
-                S.supplier_payment = int(S.supplier_payment) + int(supplier_payment)
+                S.supplier_payment = int(
+                    S.supplier_payment) + int(supplier_payment)
                 S.save()
 
         id = request.data.get('id', None)
         name = request.data.get('name', None)
         description = request.data.get('description', None)
-        
+
         if not id == None:
             C = models.Supplier.objects.get(id=id)
             C.name = name
@@ -1633,10 +1814,10 @@ class SupplierView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
-    def delete(self,request):
+    def delete(self, request):
 
         supplier_id = request.GET.get("supplier_id", None)
-        products =  request.GET.get('products', None)
+        products = request.GET.get('products', None)
 
         user = get_user_model().objects.get(username=request.user, is_plan=True)
 
@@ -1644,7 +1825,7 @@ class SupplierView(APIView):
 
         if not products == None:
             C = models.Supplier.objects.get(id=supplier_id)
-            S = models.Product.objects.get(user=user,id=products)
+            S = models.Product.objects.get(user=user, id=products)
             S.save()
             C.products.remove(S)
             C.save()
@@ -1652,9 +1833,7 @@ class SupplierView(APIView):
             C = models.Supplier.objects.get(id=supplier_id)
             C.delete()
 
-
         return Response(status=status.HTTP_200_OK)
-
 
 
 class SoldProduct(APIView):
@@ -2174,7 +2353,7 @@ class PricingRequestView(APIView):
             return Response(status=status.HTTP_201_CREATED)
         return Response('not access')
 
-    def delete(self,request):
+    def delete(self, request):
         id = request.GET.get('id')
         user = get_user_model().objects.get(username=request.user)
         if user.is_superuser:
@@ -2183,7 +2362,6 @@ class PricingRequestView(APIView):
 
             return Response(status=status.HTTP_200_OK)
         return Response('not access')
-
 
 
 class LogoutUserAPIView(APIView):

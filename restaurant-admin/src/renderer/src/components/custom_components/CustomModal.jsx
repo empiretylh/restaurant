@@ -21,7 +21,7 @@ const CustomModal = ({ open:show, setOpen, children, title = APPNAME, full = fal
 	return (
 
 		<div
-			className={`fixed top-0 left-0 w-full h-full bg-gray-500 bg-opacity-50 flex justify-center items-center scale-0 duration-300 ${show ? 'scale-100' : ''} `}
+			className={`fixed top-0 left-0 w-full h-full bg-gray-500 bg-opacity-50 flex justify-center items-center scale-0 duration-300 ${show ? 'scale-100' : ''} overflow-auto`}
 
 			style={{
 				zIndex: 1,

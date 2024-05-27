@@ -1,4 +1,4 @@
-import React, { useState, useMemo , useContext} from "react";
+import React, { useState, useMemo, useContext } from "react";
 import { IMAGE } from "../assets/image";
 import { useMutation, useQuery } from "react-query";
 import {
@@ -16,8 +16,8 @@ import { UseFoodsCategory, useFoodData } from "../context/FoodDataProvider";
 import { useCategoryData } from "../context/CategoryDataProvider";
 import { useProductsData } from "../context/ProductsDataProvider";
 import { useKitchen } from "../context/KitchenDataProvider";
-import {useProfile } from "../context/ProfileDataProvider";
-import {AuthContext} from "../context/AuthProvider"
+import { useProfile } from "../context/ProfileDataProvider";
+import { AuthContext } from "../context/AuthProvider"
 import { useEffect } from "react";
 import Collapsible from "react-collapsible";
 import CustomModal from './component/CustomModal'
@@ -108,7 +108,7 @@ const Kitchen = () => {
     const { category_data, data: categorys } = useCategoryData();
     const { product_data, data: products } = useProductsData();
 
-    const {profile_data, data: profiles} = useProfile();
+    const { profile_data, data: profiles } = useProfile();
 
     const [selectedKitchen, setSelectedKitchen] = useState(
         localStorage.getItem("selectedKitchen"),
@@ -193,8 +193,8 @@ const Kitchen = () => {
             } else if (selectedType == "Completed") {
                 return result?.filter((i) => i.isFinish && i.isFinish);
             } else {
-                if(searchText){
-                    return result.filter(item=> searchText.includes(item.id) || searchText.includes(item.orders?.table?.name))
+                if (searchText) {
+                    return result.filter(item => searchText.includes(item.id) || searchText.includes(item.orders?.table?.name))
                 }
 
                 return result;
@@ -211,7 +211,7 @@ const Kitchen = () => {
         let consolidatedOrdersProduct = {};
 
         let map = OrderDataFilter?.map((order) => {
-            
+
 
             order.orders.food_orders.map((item) => {
                 // Check if the item already exists in consolidatedOrders consolidatedOrdersProduct[item.product.id].qty 
@@ -231,7 +231,7 @@ const Kitchen = () => {
                 // Check if the item already exists in consolidatedOrders
                 if (consolidatedOrdersProduct[item.product.id]) {
                     // If exists, add the quantity to the existing quantity
-                     consolidatedOrdersProduct[item.product.id].qty =  parseInt(consolidatedOrdersProduct[item.product.id]?.qty)  + parseInt(item.qty);
+                    consolidatedOrdersProduct[item.product.id].qty = parseInt(consolidatedOrdersProduct[item.product.id]?.qty) + parseInt(item.qty);
                 } else {
                     // If not exists, create a new entry
                     console.log("item", item)
@@ -241,26 +241,26 @@ const Kitchen = () => {
 
             console.log(consolidatedOrders)
 
-          
+
         });
-        return {foods :  Object.values(consolidatedOrders), products : Object.values(consolidatedOrdersProduct)}
+        return { foods: Object.values(consolidatedOrders), products: Object.values(consolidatedOrdersProduct) }
     }, [OrderDataFilter]);
 
 
-    useEffect(()=>{
-        if(selectedTime){
+    useEffect(() => {
+        if (selectedTime) {
             ordersdata.refetch()
         }
-    },[selectedTime])
+    }, [selectedTime])
 
 
 
-    useEffect(()=>{
-        if(selectedType != 'History'){
+    useEffect(() => {
+        if (selectedType != 'History') {
             setSearchText('')
             setSelectedTime('today')
         }
-    },[selectedType])
+    }, [selectedType])
 
     const OrderItem = ({ item }) => {
         const [elapsedTime, setElapsedTime] = useState("");
@@ -325,10 +325,17 @@ const Kitchen = () => {
                     <div>
                         <h1 className="text-sm">#{item?.id}</h1>
                         <h1 className="text-sm">
-                            {item?.orders?.table.name} -{" "}
-                            <span className="text-sm">
-                                {item.orders?.table?.floor_name}
-                            </span>
+                            {item?.orders?.isDelivery ? <>
+                                Delivery -  <span className="text-sm">
+                                    {new Date(item.orders?.deliveryorder?.exceptTime).toLocaleString()}
+                                </span>
+                            </> : <>
+                                {item?.orders?.table?.name} -{" "}
+
+                                <span className="text-sm">
+                                    {item.orders?.table?.floor_name}
+                                </span>
+                            </>}
                         </h1>
                     </div>
                     <div className="ml-auto">
@@ -365,8 +372,8 @@ const Kitchen = () => {
                         {item.isFinish
                             ? "Completed"
                             : item.isCooking
-                              ? `Finish Cooking ${elapsedTime}`
-                              : "Start Cooking"}
+                                ? `Finish Cooking ${elapsedTime}`
+                                : "Start Cooking"}
                     </button>
                     <button className="text-black p-2 border hover:bg-gray-600 hover:text-white">
                         <icon className="bi bi-printer text-xl" />
@@ -377,7 +384,7 @@ const Kitchen = () => {
     };
 
 
-    const HistoryItem = ({ item , index }) => {
+    const HistoryItem = ({ item, index }) => {
         const Head = () => (
             <div className={`hover:bg-gray-200 w-ful col-span-3 grid grid-cols-6 ${index % 2 == 0 && 'bg-blue-100'}`}>
                 <p className="border px-4 py-2 flex w-full">#{item.id}</p>
@@ -402,74 +409,74 @@ const Kitchen = () => {
         return (
             <Collapsible trigger={<Head />} className={"w-full col-span-3 "}>
 
-                   <table className="w-full bg-yellow-100">
-                        <tr>
-                            <th class="p-1 border text-center">
-                                Name
-                            </th>
-                            <th class="p-1 border text-center">
-                                Qty
-                            </th>
-                        </tr>
-                        <tbody>
-                           {item?.orders.food_orders.map((item,index)=>
-                             <tr key={index}>
+                <table className="w-full bg-yellow-100">
+                    <tr>
+                        <th class="p-1 border text-center">
+                            Name
+                        </th>
+                        <th class="p-1 border text-center">
+                            Qty
+                        </th>
+                    </tr>
+                    <tbody>
+                        {item?.orders.food_orders.map((item, index) =>
+                            <tr key={index}>
                                 <td className="p-1 border text-center">
                                     {item?.food?.name}
                                 </td>
                                 <td className="p-1 border text-center">
                                     {item.qty}
                                 </td>
-                                                           
-                             </tr>
-                            )}
-                           {item?.orders.product_orders?.map((item,index)=>
-                             <tr key={index}>
+
+                            </tr>
+                        )}
+                        {item?.orders.product_orders?.map((item, index) =>
+                            <tr key={index}>
                                 <td className="p-1 border text-center">
                                     {item?.product?.name}
                                 </td>
                                 <td className="p-1 border text-center">
                                     {item.qty}
                                 </td>
-                                                           
-                             </tr>
-                            )}
-                        </tbody>
-                    </table>
+
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
 
             </Collapsible>
         );
     };
 
 
-    const ProfileModal = ()=>{
+    const ProfileModal = () => {
 
-        const {LogOut } =  useContext(AuthContext)
+        const { LogOut } = useContext(AuthContext)
         return (
             <CustomModal open={showProfile} setOpen={setShowProfile} title="Profile">
-                    <h1>Username : {profiles?.username}</h1>
-                    <h1>Phone Number : {profiles?.phoneno}</h1>
+                <h1>Username : {profiles?.username}</h1>
+                <h1>Phone Number : {profiles?.phoneno}</h1>
 
-                    <div className="flex flex-row w-full gap-2">
-                        <button onClick={()=> {
+                <div className="flex flex-row w-full gap-2">
+                    <button onClick={() => {
 
-                        if(confirm("Are you sure to logout")){
+                        if (confirm("Are you sure to logout")) {
                             LogOut();
                         }
 
                     }} className="p-2 bg-red-500 text-white rounded flex flex-row gap-2 items-center ml-auto">
                         <i class="bi bi-box-arrow-right"></i>
-                            <h1> Logout</h1>
-                        </button>
-                        <button onClick={()=> setShowProfile(false)} className="p-2 bg-blue-500 text-white rounded flex flex-row gap-2 items-center">
-                            <h1> Cancel</h1>
-                        </button>
+                        <h1> Logout</h1>
+                    </button>
+                    <button onClick={() => setShowProfile(false)} className="p-2 bg-blue-500 text-white rounded flex flex-row gap-2 items-center">
+                        <h1> Cancel</h1>
+                    </button>
 
-                    </div>
+                </div>
 
 
             </CustomModal>
-            )
+        )
     }
 
     return (
@@ -536,27 +543,27 @@ const Kitchen = () => {
                 </div>
 
                 <div className="flex flex-row p-2 gap-2">
-                  <button className="border p-2 ml-auto" onClick={()=> setShowProfile(true) }>
+                    <button className="border p-2 ml-auto" onClick={() => setShowProfile(true)}>
                         <i class="bi bi-person text-xl"></i>
                     </button>
-                    <button className="border p-2" onClick={()=> setOpenMenu(prev=> !prev) }>
+                    <button className="border p-2" onClick={() => setOpenMenu(prev => !prev)}>
                         <i class="bi bi-list text-xl"></i>
                     </button>
                 </div>
             </div>
-            <ProfileModal/>
+            <ProfileModal />
             <div className="overflow-y-auto h-full pb-10">
                 {selectedType == "History" ? (
                     <div className="flex flex-col gap-2 p-10 justify-center items-center">
                         <div className="bg-white p-2">
                             <div className="flex flex-row">
-                                <button className={`p-2  ${selectedTime == 'today'? 'bg-blue-500 text-white' : ''}  border `} onClick={()=> setSelectedTime('today')}>Today</button>
-                                <button className={`p-2  ${selectedTime == 'week'? 'bg-blue-500 text-white' : ''}  border `} onClick={()=>  setSelectedTime('week')}>Week</button>
-                                <button className={`p-2  ${selectedTime == 'month'? 'bg-blue-500 text-white' : ''}  border `} onClick={()=>  setSelectedTime('month')}>Month</button>
-                                <button className={`p-2  ${selectedTime == 'year'? 'bg-blue-500 text-white' : ''}  border `} onClick={()=>  setSelectedTime('year')}>Year</button>
-                           
-                                <input type="text" placeholder="Search Orders" className="border ml-auto p-2" onChange={e=>setSearchText(e.target.value)} />
-                             </div>
+                                <button className={`p-2  ${selectedTime == 'today' ? 'bg-blue-500 text-white' : ''}  border `} onClick={() => setSelectedTime('today')}>Today</button>
+                                <button className={`p-2  ${selectedTime == 'week' ? 'bg-blue-500 text-white' : ''}  border `} onClick={() => setSelectedTime('week')}>Week</button>
+                                <button className={`p-2  ${selectedTime == 'month' ? 'bg-blue-500 text-white' : ''}  border `} onClick={() => setSelectedTime('month')}>Month</button>
+                                <button className={`p-2  ${selectedTime == 'year' ? 'bg-blue-500 text-white' : ''}  border `} onClick={() => setSelectedTime('year')}>Year</button>
+
+                                <input type="text" placeholder="Search Orders" className="border ml-auto p-2" onChange={e => setSearchText(e.target.value)} />
+                            </div>
                             <div className="mt-2">
                                 <div className="grid grid-cols-6">
                                     <div className="px-4 py-2 border">
@@ -578,61 +585,61 @@ const Kitchen = () => {
                                         Complete
                                     </div>
                                 </div>
-                                {OrderDataFilter?.map((item ,index) => (
-                                    <HistoryItem item={item} index={index}/>
+                                {OrderDataFilter?.map((item, index) => (
+                                    <HistoryItem item={item} index={index} />
                                 ))}
                             </div>
                         </div>
                     </div>
                 ) : (
-                <div className="flex flex-row">
-                    <div className="flex flex-row flex-wrap gap-2 p-10 justify-center items-center w-full">
-                        {OrderDataFilter?.map((item) => (
-                            <OrderItem item={item} />
-                        ))}
-                    </div>
-                    <div className={`${openMenu ? 'w-[30%] scale-100' : 'w-[0%] scale-0 origin-left'} bg-white shadow-lg transition duration-500"`} style={{
-                    
-                    }}>
-                    <table className="w-full">
-                        <tr>
-                            <th class="p-1 border text-center">
-                                Name
-                            </th>
-                            <th class="p-1 border text-center">
-                                Qty
-                            </th>
-                        </tr>
-                        <tbody>
-                           {SameOrderDataFilter?.foods.map((item,index)=>
-                             <tr key={index}>
-                                <td className="p-1 border text-center">
-                                    {item?.food?.name}
-                                </td>
-                                <td className="p-1 border text-center">
-                                    {item.qty}
-                                </td>
-                                                           
-                             </tr>
-                            )}
-                           {SameOrderDataFilter?.products.map((item,index)=>
-                             <tr key={index}>
-                                <td className="p-1 border text-center">
-                                    {item?.product?.name}
-                                </td>
-                                <td className="p-1 border text-center">
-                                    {item.qty}
-                                </td>
-                                                           
-                             </tr>
-                            )}
-                        </tbody>
-                    </table>
+                    <div className="flex flex-row">
+                        <div className="flex flex-row flex-wrap gap-2 p-10 justify-center items-center w-full">
+                            {OrderDataFilter?.map((item) => (
+                                <OrderItem item={item} />
+                            ))}
+                        </div>
+                        <div className={`${openMenu ? 'w-[30%] scale-100' : 'w-[0%] scale-0 origin-left'} bg-white shadow-lg transition duration-500"`} style={{
 
-                        
+                        }}>
+                            <table className="w-full">
+                                <tr>
+                                    <th class="p-1 border text-center">
+                                        Name
+                                    </th>
+                                    <th class="p-1 border text-center">
+                                        Qty
+                                    </th>
+                                </tr>
+                                <tbody>
+                                    {SameOrderDataFilter?.foods.map((item, index) =>
+                                        <tr key={index}>
+                                            <td className="p-1 border text-center">
+                                                {item?.food?.name}
+                                            </td>
+                                            <td className="p-1 border text-center">
+                                                {item.qty}
+                                            </td>
+
+                                        </tr>
+                                    )}
+                                    {SameOrderDataFilter?.products.map((item, index) =>
+                                        <tr key={index}>
+                                            <td className="p-1 border text-center">
+                                                {item?.product?.name}
+                                            </td>
+                                            <td className="p-1 border text-center">
+                                                {item.qty}
+                                            </td>
+
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+
+
+                        </div>
                     </div>
-                </div>
-                    
+
                 )}
             </div>
         </div>

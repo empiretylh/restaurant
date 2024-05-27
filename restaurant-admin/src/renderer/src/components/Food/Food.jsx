@@ -448,9 +448,7 @@ const Food = () => {
 					<h1 className="text-md  text-yellow-800">Price: {numberWithCommas(item.price)} Ks</h1>
 				</div>
 				<div className="flex flex-row items-center w-full">
-					<p className="text-gray-800 text-sm">
-						{item.description}
-					</p>
+					
 					<button
 						onClick={() => {
 							setShowAdd(true);
@@ -465,7 +463,6 @@ const Food = () => {
 					}} className={`border border-gray-300 p-2 rounded text-black hover:bg-green-700 ${item.isavaliable ? 'bg-green-700 text-white hover:bg-red-500' : ''} hover:text-white ml-1`}>
 						<icon className="bi bi-eye"></icon>
 					</button>
-
 				</div>
 						<h1 className="text-md font-bold p-2 bg-red-500 absolute rounded-lg text-white right-1 top-1">{item.qty}</h1> 
 			</div>

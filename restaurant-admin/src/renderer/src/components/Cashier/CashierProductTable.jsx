@@ -3,9 +3,9 @@ import numberWithCommas from '../custom_components/NumberWithCommas';
  
 
 
-const CashierProductTable = ({data, selectedRows = [], setSelectedRows, isCombine = false})=>{
+const CashierProductTable = ({data, selectedRows = [], setSelectedRows, isCombine = false, setSelectedTable})=>{
 
-	const onSelectedRow = (index)=>{
+	const onSelectedRow = (index, tableid)=>{
 		if(selectedRows.includes(index)){
 			setSelectedRows(selectedRows.filter(i=> i != index))
 		}else{
@@ -16,6 +16,7 @@ const CashierProductTable = ({data, selectedRows = [], setSelectedRows, isCombin
 				setSelectedRows([index])
 			}
 		}
+		setSelectedTable(tableid)
 	}
 	return (
 		<table className="w-full border-black">
@@ -29,8 +30,8 @@ const CashierProductTable = ({data, selectedRows = [], setSelectedRows, isCombin
 				</tr>
 			</thead>
 			<tbody>
-				{data?.map(item => (
-					<tr className={`hover:bg-blue-500 cursor-pointer ${selectedRows.includes(item.id) && 'bg-blue-700 text-white font-bold'}`} onClick={()=> onSelectedRow(item.id)}>
+				{data?.filter(it=> !it?.orders?.isDelivery).map(item => (
+					<tr className={`hover:bg-blue-500 cursor-pointer ${selectedRows.includes(item.id) && 'bg-blue-700 text-white font-bold'}`} onClick={()=> onSelectedRow(item.id, item.orders?.table?.id)}>
 					<td className="p-2 border  text-center">
 						#{item.id}
 					</td>
