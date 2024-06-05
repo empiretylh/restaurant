@@ -45,14 +45,14 @@ const SetPaymentModal = ({ show, setShow, payment_data }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         SetPaymentToServer.mutate({
-            sale_id : parseInt(payment_data.receiptNumber, 10),
+            sale_id : parseInt(payment_data?.id, 10),
             customer_payment : price
         });
     }
 
     const shouldpaymentprice = useMemo(() => {
         if (payment_data) {
-            let price = parseInt(payment_data.grandtotal) - parseInt(payment_data.customer_payment)
+            let price = parseInt(payment_data.totalPrice) - parseInt(payment_data.totalPayment)
             return price;
         }
     }, [payment_data])

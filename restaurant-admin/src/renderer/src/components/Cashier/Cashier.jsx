@@ -3,7 +3,7 @@ import TopBar from '../TopBar/Bar'
 import { IMAGE } from '../../config/image'
 import CustomModal from '../custom_components/CustomModal';
 import { useMutation, useQuery } from 'react-query';
-import { createFood, createKitchen, deleteFood, getKitchen, putFood, getOrders } from '../../server/api';
+import { createFood, createKitchen, deleteFood, getKitchen, putFood, getOrders, deleteSendOrder } from '../../server/api';
 import { useCategoryData } from '../../context/CategoryDataProvider';
 import { useKitchen } from '../../context/KitchenDataProvider';
 import { useProductsData } from '../../context/ProductsDataProvider';
@@ -19,6 +19,7 @@ import SplitView from './SplitView';
 import Waiter from './Waiter';
 import DeliverOrder from './DeliverOrder';
 import CashierDeliveryTable from './CashierDeliveryTable';
+import HistoryTable from './HistoryTable';
 
 const Cashier = () => {
 
@@ -38,12 +39,36 @@ const Cashier = () => {
 	const [showWaiter, setShowWaiter] = useState(false);
 	const [showDelivery, setShowDelivery] = useState(false);
 
-	const { Orderdata, isCombine, setIsCombine, loading, setLoading, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher, setSelectedTable, saveAllVoucher } = useContext(CashOrderContextProvider);
+	const { Orderdata, isCombine, setIsCombine, loading, setLoading, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher, setSelectedTable, saveAllVoucher, searchText, setSearchText } = useContext(CashOrderContextProvider);
 
 	const WaiterView = () => {
 		return <CustomModal open={showWaiter} setOpen={setShowWaiter} full title="Orders">
 			<Waiter />
 		</CustomModal>
+	}
+
+	const DeleteOrder = useMutation(deleteSendOrder, {
+		onMutate: (e) => {
+			console.log(e)
+			setLoading(true)
+		},
+		onSuccess: () => {
+			setLoading(false);
+		},
+		onError: () => {
+			setLoading(false);
+		}
+	})
+
+	const onDelete = () => {
+		let re = confirm("Are you sure want to delete selected order")
+		if (re) {
+			selectedRows.map(item => {
+				DeleteOrder.mutate({
+					id: item
+				})
+			})
+		}
 	}
 
 
@@ -75,7 +100,7 @@ const Cashier = () => {
 						<icon className="bi bi-plus-circle"></icon>	Delivery Order
 					</button>
 					{/* delete button */}
-					<button onClick={() => setShowDelete(true)} className="p-3 text-black hover:text-white  border-gray-400 border rounded font-mono hover:bg-red-500 ml-3">
+					<button onClick={onDelete} className="p-3 text-black hover:text-white  border-gray-400 border rounded font-mono hover:bg-red-500 ml-3">
 						<icon className="bi bi-trash"></icon> Delete Order
 					</button>
 
@@ -91,7 +116,7 @@ const Cashier = () => {
 				height: 'calc(100vh - 60px)',
 				overflow: 'auto',
 			}}>
-				<div className="bg-white p-2 col-span-4 mt-2 ml-2">
+				<div className={`bg-white p-2 ${showTable == 'History' ? 'col-span-6' : 'col-span-4'} mt-2 ml-2`}>
 					<div className="flex flex-row items-center mb-2">
 						<h1 className={`text-md w-[100px] text-center p-2 border-b cursor-pointer ${showTable == 'Orders' && 'border-blue-500 border-b-2'}`} onClick={() => {
 							setShowTable('Orders')
@@ -109,7 +134,9 @@ const Cashier = () => {
 
 						<div className="ml-auto flex flex-row items-center gap-2">
 							<icon className="bi bi-search text-lg"></icon>
-							<input type="text" className='border p-2 ' placeholder='Search Orders'>
+							<input type="text" className='border p-2 ' placeholder='Search Orders' onChange={(e) => {
+								setSearchText(e.target.value)
+							}}>
 
 							</input>
 						</div>
@@ -122,8 +149,11 @@ const Cashier = () => {
 						<CashierDeliveryTable data={Orderdata} selectedRows={selectedRows} setSelectedRows={setSelectedRows} isCombine={isCombine} setSelectedTable={setSelectedTable} />
 
 					}
+					{showTable == "History" &&
+						<HistoryTable />
+					}
 				</div>
-				<div className='bg-white col-span-2 mx-2 mt-2'>
+				{showTable !== "History" && <div className='bg-white col-span-2 mx-2 mt-2'>
 					<div className="flex flex-row items-center mb-2">
 						<h1 className={`text-md  text-center p-2 border-b cursor-pointer  hover:border-b-2  hover:border-blue-500`} onClick={() => {
 							if (selectedVoucher.length > 0) {
@@ -162,12 +192,12 @@ const Cashier = () => {
 					<div className='flex flex-col overflow-y-auto'>
 						<div className='p-2 flex flex-col gap-2'>
 							{Voucher?.map((Order, index) =>
-								<VoucherView data={Order} index={index} selectedRows={selectedRows} selectedVoucher={selectedVoucher} setSelectedVoucher={setSelectedVoucher} isDelivery={showTable=='Delivery'} />
+								<VoucherView data={Order} index={index} selectedRows={selectedRows} selectedVoucher={selectedVoucher} setSelectedVoucher={setSelectedVoucher} isDelivery={showTable == 'Delivery'} />
 
 							)}
 						</div>
 					</div>
-				</div>
+				</div>}
 			</div>
 
 			<div className="p-1 bg-yellow-200 w-full flex-row flex gap-2">

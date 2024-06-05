@@ -15,6 +15,8 @@ import SupplierEditModal from './SupplierEditModal';
 import SelectProductsModal from './SelectProudctsModal';
 import { ProductsByID, useSupplierData } from '../../context/SupplierProvider';
 import { useUserType } from '../../context/UserTypeProvider';
+import Bar from '../TopBar/Bar';
+import { IMAGE } from '../../config/image';
 const { ipcRenderer } = window.electron
 
 
@@ -25,7 +27,7 @@ const Supplier = () => {
 
     const [loading, setLoading] = useState(false);
 
-    const {isAdmin} = useUserType();
+    const { isAdmin } = useUserType();
 
 
     const [searchtext, setSearchtext] = useState('');
@@ -43,7 +45,7 @@ const Supplier = () => {
         return <div>Loading...</div>; // or some other placeholder
     }
 
-    const { supplier_data , data} = supplierData;
+    const { supplier_data, data } = supplierData;
 
 
 
@@ -151,20 +153,21 @@ const Supplier = () => {
     }, []);
 
     return (
-        <div className='flex flex-row h-screen'>
-            <Navigation />
+        <div className='flex flex-col h-screen'>
             <Loading show={loading} />
-            <div className="bg-white font-sans h-full w-full p-3 overflow-auto">
-                <div className="flex flex-row items-center bg-white ">
-                    <i className='bi bi-box text-2xl mr-2'></i>
-                    <h1 className='text-2xl font-bold'>{t('Supplier')}</h1>
+            <Bar >
+                <div className="flex flex-row items-center w-full">
+                    <img src={IMAGE.supplier} style={{ width: 40 }} />
+                    <h1 className="text-xl font-bold ml-3">Supplier</h1>
+
 
                     <h1 className='text-lg font-bold text-right ml-auto' style={{ width: 180 }}>{numberWithCommas(AllVoucherRemaingTotal)} MMK</h1>
 
-
                 </div>
 
-                {/*Search Bar */}
+            </Bar>
+            <div className="bg-white font-sans h-full w-full p-3 overflow-auto">
+                    {/*Search Bar */}
                 <div className='grid grid-cols-3 gap-3 mt-3'>
                     <div className="col-span-1 border p-2">
                         <div className='flex flex-row items-center'>
@@ -236,7 +239,7 @@ const Supplier = () => {
                                             Edit
                                         </label>
                                     </button>
-                                {isAdmin &&    <button className='bg-red-500 hover:bg-red-600 text-white rounded-md p-2 whitespace-nowrap'
+                                    {isAdmin && <button className='bg-red-500 hover:bg-red-600 text-white rounded-md p-2 whitespace-nowrap'
                                         onClick={() => {
                                             showConfirm("Delete Supplier", "Are you sure to delete this supplier?", () => {
                                                 DeleteSupplier.mutate({ id: selectedSupplier?.id });
@@ -269,6 +272,7 @@ const Supplier = () => {
                             </div>
                         </div>
                         {selectedSupplier ?
+                        
                             <SupplierVoucherTable
                                 data={salesData}
                                 searchtext={searchtext}
@@ -289,13 +293,13 @@ const Supplier = () => {
 
                 </div>
 
-            </div>
+            </div >
             <AddSupplier show={showSupplier} setShow={setShowSupplier} />
             <SetPaymentModal show={showPayment} setShow={setShowPayment} payment_data={selectedRow} />
             <SupplierEditModal show={showEditCustomer} setShow={setShowEditCustomer} oldcustomer={selectedSupplier} />
             <SelectProductsModal show={showSelectedSales} setShow={setShowSelectedSales} oldSalesData={salesData} customerid={selectedSupplier?.id} />
 
-        </div>
+        </div >
     )
 }
 

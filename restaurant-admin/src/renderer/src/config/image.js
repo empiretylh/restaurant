@@ -12,6 +12,11 @@ import Waiter from '../assets/icon/waiter.png'
 import Accounts from '../assets/icon/account.png';
 import Admin from '../assets/icon/admin.png';
 import Cashier from '../assets/icon/cashier.png';
+import CompanyProfile from '../assets/icon/companyprofile.png';
+import Customer from '../assets/icon/customer.png';
+import Supplier from '../assets/icon/supplier.png';
+import Voucher from '../assets/icon/voucher.png';
+import Report from '../assets/icon/report.png';
 
 export const IMAGE = {
     app_icon: appicon,
@@ -28,5 +33,10 @@ export const IMAGE = {
     account:Accounts,
     admin:Admin,
     cashier:Cashier,
+    companyprofile:CompanyProfile,
+    customer:Customer,
+    supplier:Supplier,
+    voucher:Voucher,
+    report:Report
 
 }

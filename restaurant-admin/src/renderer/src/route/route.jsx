@@ -21,6 +21,7 @@ import Food from "../components/Food/Food"
 import Table from "../components/Table/Table";
 import Notification from "../components/Notification/Notification";
 import Account from "../components/Account/Account";
+import VoucherReport from "../components/VoucherReport/VoucherReport";
 
 const Routes = () => {
   const { token } = useAuth();
@@ -67,6 +68,10 @@ const Routes = () => {
     {
       path: '/expense',
       element: <Expense />
+    },
+    {
+      path: '/voucherreport',
+      element: <VoucherReport />
     },
     {
       path: '/otherincome',

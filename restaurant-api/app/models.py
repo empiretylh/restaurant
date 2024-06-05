@@ -42,7 +42,7 @@ class Category(models.Model):
     show = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.title + ' ' + self.user.username
+        return self.title 
 
 
 class Product(models.Model):
@@ -171,6 +171,16 @@ class RealOrder(models.Model):
     realProfit = models.CharField(max_length=10, null=True, blank=True, default=0)
    
 
+    def delete(self, *args, **kwargs):
+            # Get related OrderDetail
+            order_detail = self.orders
+
+            # Delete OrderDetail
+            order_detail.delete()
+
+            # Call the "real" delete() method.
+            super().delete(*args, **kwargs)
+
 class SaveVoucherHistory(models.Model):
     customername =  models.CharField(max_length=100, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -186,6 +196,17 @@ class SaveVoucherHistory(models.Model):
     payment_type =  models.CharField(max_length=10, default="Cash")
     description =  models.TextField(default="")
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class WasteProduct(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    unit = models.CharField(max_length=30, null=False, blank=False)
+    cost = models.CharField(max_length=30, null=False, blank=False)
+    date = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.product.name
 
 
 
@@ -235,11 +256,11 @@ class Sales(models.Model):
 class CustomerName(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False, unique=True)
     description = models.TextField(blank=True, null=True)
-    sales = models.ManyToManyField(Sales, related_name='customer_sales')
-    user =  models.ForeignKey(User, on_delete=models.CASCADE)
+    sales = models.ManyToManyField(SaveVoucherHistory, related_name='sales')
+
 
     def __str__(self):
-        return self.name + ' ' + self.user.username
+        return self.name
 
 
 class Supplier(models.Model):

@@ -1050,6 +1050,18 @@ class SendOrder(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+    def delete(self, request):
+        # delete also realorder.orders and produt order as sale retun to product
+        print(request.data)
+        realorder_id = request.GET.get('id')
+        realorder = models.RealOrder.objects.get(id=realorder_id)
+
+        realorder.delete()
+
+        return Response(status=status.HTTP_200_OK)
+
+        
+
 
 def ComputeProductItemFood(food, qty):
     Food = food
@@ -1097,7 +1109,152 @@ class ItemDiscountAPIView(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
 
+
+
+def MinusOrderRemoveItem(order_item, remove_qty):
+    remainqty =  int(remove_qty)
+    originalqty  = int(order_item.qty)
+
+    if originalqty > remainqty:
+        order_item.qty = originalqty - remainqty
+        order_item.save()
+        return 0
+    elif originalqty == remainqty:
+        order_item.delete()
+        return 0
+    else:
+        remainqty = remainqty - originalqty
+        order_item.delete()
+        return remainqty
+
+def calculateWasteProduct(order_item, ispd, waste_qty):
+    if ispd:
+        product = order_item.product       
+        unit = int(product.unit) * int(waste_qty)
+        cost = int(product.cost) * int(waste_qty)      
+        models.WasteProduct.objects.create(product=product, unit=unit, cost=cost, description="Waste Product Order ID - #"+ str(order_item.id))
+    else:
+        food = order_item.food
+        integrients = food.integrient.all()
+        for i in integrients:
+            pd = i.product
+            unit = int(i.useunit) * int(waste_qty)
+            cost = int(pd.cost) * int(waste_qty)
+            models.WasteProduct.objects.create(product=pd, unit=unit, cost=cost, description="Waste Product Order ID - #"+ str(order_item.id))
+    
+
+
+def MinusOrderWasteItem(order_item, waste_qty, ispd=False):
+    remainqty =  int(waste_qty)
+    originalqty  = int(order_item.qty)
+
+    if originalqty > remainqty:
+        order_item.qty = originalqty - remainqty
+        calculateWasteProduct(order_item, ispd, waste_qty)
+        
+        order_item.save()
+        return 0
+    elif originalqty == remainqty:
+        calculateWasteProduct(order_item, ispd, waste_qty)
+        order_item.delete()
+        return 0
+    else:
+        remainqty = remainqty - originalqty
+        calculateWasteProduct(order_item, ispd, waste_qty)
+        order_item.delete()
+        return remainqty
+
+
+
+
+
+def ComputeVoucherData(self, order_ids, orderPayment, isSVH = False, SVH = False):
+     AllTotalPrice  = 0
+     for order_id in order_ids:
+            if isSVH:
+                realOrder = models.RealOrder.objects.get(id=order_id)
+            else:
+                realOrder = models.RealOrder.objects.get(id=order_id.id)
+
+            if isSVH:
+                SVH.order.add(realOrder)
+
+            totalPrice = 0
+            totalProfit = 0
+
+            for food_order in realOrder.orders.food_orders.all():
+                salePriceWithDiscount = int(food_order.food.price) - discountCalculatorWithPerctange(self, food_order.food.price, food_order.discount)
+                OriginalProfit = food_order.food.profit
+
+                BuyPrice = int(food_order.food.price) - int(OriginalProfit)
+                SaleProfit = int(salePriceWithDiscount) - int(BuyPrice)
+
+                # print(OriginalProfit, "Originalprofit", salePriceWithDiscount, SaleProfit)
+                food_order.total_price = int(salePriceWithDiscount) * int(food_order.qty)
+
+                totalPrice += int(salePriceWithDiscount) * int(food_order.qty)
+                totalProfit += int(SaleProfit) * int(food_order.qty)
+                ComputeProductItemFood(food_order.food,food_order.qty)
+                food_order.isPaid = True
+                food_order.save()
+
+            for product_order in realOrder.orders.product_orders.all():
+                pd = product_order.product
+                salePriceWithDiscount = int(pd.price) -  discountCalculatorWithPerctange(self, product_order.product.price, product_order.discount)
+                SaleProfit = int(salePriceWithDiscount) - int(pd.cost)
+                totalPrice += int(salePriceWithDiscount) * int(product_order.qty)
+
+                product_order.total_price = int(salePriceWithDiscount) * int(product_order.qty)
+
+                totalProfit += int(SaleProfit) * int(product_order.qty)
+                ComputeProductItemProduct(pd, product_order.qty)
+                product_order.isPaid = True
+                product_order.save()
+                       
+            realOrder.originaltotalPrice = totalPrice
+            realOrder.totalProfit = totalProfit
+            
+            if not realOrder.totalPayment == None:
+                realOrder.totalPayment = int(float(realOrder.totalPayment)) + int(float(orderPayment))
+           
+            realProfit = (convert_to_number(realOrder.totalProfit) + convert_to_number(realOrder.totalPayment)) - int(convert_to_number(realOrder.originaltotalPrice)) - int(convert_to_number(SVH.delivery))
+            realOrder.realProfit =  realProfit
+            realOrder.isPaid = True
+            realOrder.save()
+        
+            AllTotalPrice += int(totalPrice)
+    
+     return AllTotalPrice
+        
+
 class OrderCompleteAPIView(APIView):
+    def get(self, request):
+        time = request.GET.get('time', 'today')
+        today = datetime.now()
+
+        this_month_start = today.replace(day=1)
+        this_week_start = today - timedelta(days=today.weekday())
+        this_year_start = today.replace(month=1, day=1)
+
+        if time == 'today':
+            Voucher = models.SaveVoucherHistory.objects.filter(
+                date__date=today)
+        elif time == 'week':
+            Voucher = models.SaveVoucherHistory.objects.filter(
+                date__date__gte=this_week_start)
+        elif time == 'month':
+            Voucher = models.SaveVoucherHistory.objects.filter(
+                date__date__gte=this_month_start)
+        elif time == 'year':
+            Voucher = models.SaveVoucherHistory.objects.filter(
+                date__date__gte=this_year_start)
+
+        ser = serializers.SaveVoucherHistorySerializer(Voucher, many=True)
+        
+        return Response(ser.data)
+        
+
+
     def post(self, request):
         print("request.data",request.data)
         order_ids = request.data.get('order_ids',[])
@@ -1110,10 +1267,17 @@ class OrderCompleteAPIView(APIView):
         isDelivery = request.data.get('isDelivery', False)
 
 
-        totalPayment = request.data.get('totalPayment',totalWillPayPrice)
 
         discount = request.data.get('discount',0)
         deliveryCharges =  request.data.get('delivery',0)
+
+        guestediscount =  int(float(totalWillPayPrice)) - discountCalculatorWithPerctange(self,totalWillPayPrice,discount) 
+
+        deliveryCharges = convert_to_number(deliveryCharges)
+        willtotalPayment = guestediscount + int(float(deliveryCharges))
+
+        totalPayment = request.data.get('totalPayment',willtotalPayment)
+        
 
         if not isDelivery:
             if not table_ids or not order_ids:
@@ -1129,63 +1293,21 @@ class OrderCompleteAPIView(APIView):
                                     discount=discount,
                                     totalPayment=totalPayment)
 
-        SVH.totalPrice = int(SVH.originaltotalPrice) - discountCalculatorWithPerctange(self,SVH.originaltotalPrice,discount)
+        SVH.totalPrice = int(SVH.originaltotalPrice) - discountCalculatorWithPerctange(self,SVH.originaltotalPrice,discount) + convert_to_number(deliveryCharges)
+        
+
         SVH.save()
 
         orderPayment = int(SVH.totalPayment) / len(order_ids)
         
-        
-        for order_id in order_ids:
-            realOrder = models.RealOrder.objects.get(id=order_id)
-          
-
-            SVH.order.add(realOrder)
-
-            totalPrice = 0
-            totalProfit = 0
-
-            for food_order in realOrder.orders.food_orders.all():
-                salePriceWithDiscount = int(food_order.food.price) - discountCalculatorWithPerctange(self, food_order.food.price, food_order.discount)
-                OriginalProfit = food_order.food.profit
-
-                BuyPrice = int(food_order.food.price) - int(OriginalProfit)
-                SaleProfit = int(salePriceWithDiscount) - int(BuyPrice)
-
-                print(OriginalProfit, "Originalprofit", salePriceWithDiscount, SaleProfit)
-
-                totalPrice += int(salePriceWithDiscount) * int(food_order.qty)
-                totalProfit += int(SaleProfit) * int(food_order.qty)
-                ComputeProductItemFood(food_order.food,food_order.qty)
-                food_order.isPaid = True
-                food_order.save()
-
-            for product_order in realOrder.orders.product_orders.all():
-                pd = product_order.product
-                salePriceWithDiscount = int(pd.price) -  discountCalculatorWithPerctange(self, product_order.product.price, product_order.discount)
-                SaleProfit = int(salePriceWithDiscount) - int(pd.cost)
-                totalPrice += int(salePriceWithDiscount) * int(product_order.qty)
-                totalProfit += int(SaleProfit) * int(product_order.qty)
-                ComputeProductItemProduct(pd, product_order.qty)
-                product_order.isPaid = True
-                product_order.save()
-                       
-            realOrder.originaltotalPrice = totalPrice
-            realOrder.totalProfit = totalProfit
-            
-            if not realOrder.totalPayment == None:
-                realOrder.totalPayment = int(float(realOrder.totalPayment)) + int(float(orderPayment))
-           
-            realProfit = (convert_to_number(realOrder.totalProfit) + convert_to_number(realOrder.totalPayment)) - int(convert_to_number(realOrder.originaltotalPrice))
-            realOrder.realProfit =  realProfit
-            realOrder.isPaid = True
-            realOrder.save()
-        
+        ComputeVoucherData(self, order_ids, orderPayment,True, SVH)
+       
         SVH.save()
                 
         if not isDelivery:
             for table_id in table_ids:
                 table = get_object_or_404(models.Table, id=table_id)
-                PdOrder = models.OrderDetail.objects.filter(
+                PdOrder = models.OrderDetail.objects.filter(    
                                 table=table).order_by('-id').first()
                 PdOrder.is_paid = True
                 table.status = False
@@ -1196,13 +1318,78 @@ class OrderCompleteAPIView(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        table_id = request.data.get('table_id')
-        table = get_object_or_404(models.Table, id=table_id)
+        table_id = request.data.get('table_id', None)
+        if not table_id == None:
+            table = get_object_or_404(models.Table, id=table_id)
+            table.status = False
+            table.save()
+            return Response(status=status.HTTP_200_OK)
 
-        table.status = False
-        table.save()
+        voucher_id = request.data.get('voucher_id',None)
+        if not voucher_id == None:
+            voucher = models.SaveVoucherHistory.objects.get(id=voucher_id)
+            # delete also related realOrders
+            realOrders = voucher.order.all()
+            for realOrder in realOrders:
+                realOrder.delete()
+
+            voucher.delete()
+
 
         return Response(status=status.HTTP_200_OK)
+    
+    def put(self, request):
+        voucher_id = request.data.get('voucher_id',None)
+        remove_item_ids = request.data.get('remove_item_id',None)
+        remove_item_qty =  request.data.get('remove_item_qty',0)
+        waste_item_qty = request.data.get('waste_item_qty',0)
+        remove_item_type = request.data.get('remove_item_type',"product")
+
+
+        Voucher =  models.SaveVoucherHistory.objects.get(id=voucher_id)
+
+        realOrders  = Voucher.order.all()
+        
+        remainqty = remove_item_qty
+        remainwasteqty = waste_item_qty
+
+        for remove_item_id in remove_item_ids:
+      
+            for realOrder in realOrders:
+                orderDetail = realOrder.orders
+
+                if remove_item_type == 'product':
+                    product_orders = orderDetail.product_orders.filter(id=remove_item_id)
+                    if product_orders.exists():
+                        remainqty = MinusOrderRemoveItem(product_orders.first(), remainqty)
+                        remainwasteqty = MinusOrderWasteItem(product_orders.first(), waste_item_qty, True)
+                else:
+                    food_orders = orderDetail.food_orders.filter(id=remove_item_id)
+                    if food_orders.exists():
+                        remainqty = MinusOrderRemoveItem(food_orders.first(), remainqty)
+                        remainwasteqty = MinusOrderWasteItem(food_orders.first(), waste_item_qty, False)
+
+
+
+        orderPayment = int(float(Voucher.totalPayment)) / len(realOrders)
+
+
+        totalWillPayPrice =  ComputeVoucherData(self, realOrders, orderPayment,False, Voucher)
+
+        guestediscount =  int(float(totalWillPayPrice)) - discountCalculatorWithPerctange(self,totalWillPayPrice,Voucher.discount) 
+
+        deliveryCharges = convert_to_number(Voucher.delivery)
+        willtotalPayment = guestediscount + int(float(deliveryCharges))
+
+        Voucher.originaltotalPrice = totalWillPayPrice
+
+        Voucher.totalPrice = willtotalPayment
+        Voucher.save()
+
+        return Response(status=status.HTTP_200_OK)        
+
+
+
 
 
 class ProductPriceChangeWithPercentage(APIView):
@@ -1211,10 +1398,7 @@ class ProductPriceChangeWithPercentage(APIView):
         minus_percentage = request.data.get('minus_perctange', None)
         plus_percentage = request.data.get('plus_perctange', None)
 
-        # print(request.data,minus_percentage,plus_percentage)
-
-        # # If minus_perctange is not None then minus_percentage will be applied to all products' price to decrease the price eg: if 5% is given then 5% will be decreased from all products' price
-        # print(float(minus_percentage) * 100,"Minus Perctangle")
+        
         if minus_percentage is not None:
             products = models.Product.objects.filter(user=user)
             for product in products:
@@ -1362,22 +1546,21 @@ class Sales(APIView):
     def get(self, request):
         type = request.GET.get('type')
         time = request.GET.get('time')
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         d = datetime.now()
         print(d)
         chartdata = {}
 
         if time == 'today':
-            data = models.Sales.objects.filter(user=user, date__year=str(
+            data = models.Sales.objects.filter( date__year=str(
                 d.year), date__month=str(d.month), date__day=str(d.day))
 
         elif time == 'month':
             data = models.Sales.objects.filter(
-                user=user, date__year=str(d.year), date__month=str(d.month))
+                 date__year=str(d.year), date__month=str(d.month))
 
         elif time == 'year':
             data = models.Sales.objects.filter(
-                user=user, date__year=str(d.year))
+                 date__year=str(d.year))
 
         elif time == 'custom':
             start_date = request.GET.get('startd')
@@ -1385,10 +1568,10 @@ class Sales(APIView):
             sd = datetime.strptime(start_date, "%m/%d/%y")
             ed = datetime.strptime(
                 end_date, "%m/%d/%y").replace(hour=11, minute=59, second=59)
-            data = models.Sales.objects.filter(user=user, date__range=(sd, ed))
+            data = models.Sales.objects.filter( date__range=(sd, ed))
 
         else:
-            data = models.Sales.objects.filter(user=user)
+            data = models.Sales.objects.all()
 
         if type == 'DT':
             s = serializers.DTSalesSerializer(data, many=True)
@@ -1441,7 +1624,7 @@ class Sales(APIView):
         # if isDiscountAmount == 'true':
         #     isDiscountAmount = True
 
-        S = models.Sales.objects.create(user=user, customerName=customerName, voucherNumber=rn,
+        S = models.Sales.objects.create( customerName=customerName, voucherNumber=rn,
                                         totalAmount=totalAmount, tax=tax, discount=discount, grandtotal=grandtotal, customer_payment=payment_amount,
                                         deliveryCharges=deliveryCharges, isDiscountAmount=isDiscountAmount,
                                         description=description)
@@ -1673,12 +1856,28 @@ class Sales(APIView):
 
         return Response(status=status.HTTP_201_CREATED)
 
+def SaveVoucherToRealOrderPayment(S, order_payment):
+    print(S.order, order_payment)
+    orders = S.order.all()
+    if len(orders) > 0:
+        order_payment = int(float(order_payment)) / len(orders)
+
+        for realOrder in orders:
+            
+            if not realOrder.totalPayment == None:
+                realOrder.totalPayment = int(float(realOrder.totalPayment)) + int(float(order_payment))
+
+            realProfit = (convert_to_number(realOrder.totalProfit) + convert_to_number(realOrder.totalPayment)) - int(convert_to_number(realOrder.originaltotalPrice))
+            realOrder.realProfit =  realProfit
+            realOrder.save()
+    else:
+        print("No orders found.")
+  
 
 class CustomerView(APIView):
 
     def get(self, request):
-        user = get_user_model().objects.get(username=request.user)
-        cu = models.CustomerName.objects.filter(user=user)
+        cu = models.CustomerName.objects.all()
 
         ser = serializers.CustomerSerializer(cu, many=True)
         return Response(ser.data)
@@ -1686,16 +1885,14 @@ class CustomerView(APIView):
     def post(self, request):
         customer_name = request.data.get('customerName', None)
         description = request.data.get('description', None)
-        user = get_user_model().objects.get(username=request.user)
         cu = models.CustomerName.objects.create(
-            name=customer_name, description=description, user=user)
+            name=customer_name, description=description)
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request):
         sale_id = request.data.get('sale_id', None)
         customer_payment = request.data.get('customer_payment', None)
 
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
 
         # add sales to customer
         customer_id = request.data.get("customer_id", None)
@@ -1707,8 +1904,12 @@ class CustomerView(APIView):
             C = models.CustomerName.objects.get(id=customer_id)
 
             for sale in sales_receipt:
-                S = models.Sales.objects.get(user=user, receiptNumber=sale)
-                S.customer_payment = 0
+                S = models.SaveVoucherHistory.objects.get(id=sale)
+
+                SaveVoucherToRealOrderPayment(S, 0)
+
+      
+                S.totalPayment = 0
                 S.save()
                 C.sales.add(S)
                 C.save()
@@ -1716,9 +1917,10 @@ class CustomerView(APIView):
                 # Customer Set Payment
         if not sale_id == None:
             if not customer_payment == 0:
-                S = models.Sales.objects.get(user=user, receiptNumber=sale_id)
-                S.customer_payment = int(
-                    S.customer_payment) + int(customer_payment)
+                S = models.SaveVoucherHistory.objects.get(id=sale_id)
+                SaveVoucherToRealOrderPayment(S, customer_payment)
+                S.totalPayment = int(
+                    S.totalPayment) + int(customer_payment)
                 S.save()
 
         id = request.data.get('id', None)
@@ -1738,14 +1940,13 @@ class CustomerView(APIView):
         customer_id = request.GET.get("customerid", None)
         sales_receipt = request.GET.get('sales', None)
 
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
 
         print(sales_receipt, customer_id)
 
         if not sales_receipt == None:
             C = models.CustomerName.objects.get(id=customer_id)
-            S = models.Sales.objects.get(
-                user=user, receiptNumber=sales_receipt)
+            S = models.SaveVoucherHistory.objects.get(
+               id=sales_receipt)
             S.save()
             C.sales.remove(S)
             C.save()
@@ -1759,24 +1960,21 @@ class CustomerView(APIView):
 class SupplierView(APIView):
 
     def get(self, request):
-        user = get_user_model().objects.get(username=request.user)
-        sup = models.Supplier.objects.filter(user=user)
+        sup = models.Supplier.objects.all()
         ser = serializers.SupplierSerializer(sup, many=True)
         return Response(ser.data)
 
     def post(self, request):
         supplier_name = request.data.get('supplierName', None)
         description = request.data.get('description', None)
-        user = get_user_model().objects.get(username=request.user)
         cu = models.Supplier.objects.create(
-            name=supplier_name, description=description, user=user)
+            name=supplier_name, description=description)
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request):
         product_id = request.data.get('product_id', None)
         supplier_payment = request.data.get('supplier_payment', None)
 
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
 
         # add sales to customer
         supplier_id = request.data.get("supplier_id", None)
@@ -1785,10 +1983,10 @@ class SupplierView(APIView):
         # productss data have only saleReceiptNumber [1, 4, 6, 0]
 
         if not productss == None:
-            C = models.Supplier.objects.get(id=supplier_id, user=user)
+            C = models.Supplier.objects.get(id=supplier_id)
 
             for pd_id in productss:
-                product = models.Product.objects.get(user=user, id=pd_id)
+                product = models.Product.objects.get(id=pd_id)
                 product.supplier_payment = 0
                 product.save()
                 C.products.add(product)
@@ -1819,13 +2017,12 @@ class SupplierView(APIView):
         supplier_id = request.GET.get("supplier_id", None)
         products = request.GET.get('products', None)
 
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
 
         print(products, supplier_id)
 
         if not products == None:
             C = models.Supplier.objects.get(id=supplier_id)
-            S = models.Product.objects.get(user=user, id=products)
+            S = models.Product.objects.get(id=products)
             S.save()
             C.products.remove(S)
             C.save()

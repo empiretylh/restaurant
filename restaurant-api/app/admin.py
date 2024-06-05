@@ -22,4 +22,5 @@ admin.site.register(models.ProductOrder)
 admin.site.register(models.RealOrder)
 admin.site.register(models.SaveVoucherHistory)
 admin.site.register(models.DeliveryOrder)
+admin.site.register(models.WasteProduct)
 #Sales Digits App

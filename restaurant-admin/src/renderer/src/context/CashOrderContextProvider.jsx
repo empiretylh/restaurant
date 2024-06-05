@@ -237,11 +237,16 @@ const CashOrderProvider = ({ children }) => {
 
             data = data.filter((item) => !item.isPaid)
 
+            if (searchText) {
+                data = data.filter((item) => item?.orders?.table?.name.toLowerCase().includes(searchText?.toLowerCase()) ||  item.id == searchText || item?.orders?.deliveryorder?.customername?.toLowerCase().includes(searchText?.toLowerCase()))
+            }
+
+
             return data;
         }
 
 
-    }, [orders_data?.data])
+    }, [orders_data?.data, searchText])
 
     const newVoucher = (data) => {
         let id = new Date().getTime();
@@ -443,7 +448,7 @@ const CashOrderProvider = ({ children }) => {
         return newresult;
 
 
-    }, [Orderdata, selectedRows]);
+    }, [Orderdata, selectedRows ]);
 
     useEffect(() => {
         if (Voucher?.length == 0) {
@@ -452,7 +457,7 @@ const CashOrderProvider = ({ children }) => {
     }, [Voucher,loading])
 
     return (
-        <CashOrderContextProvider.Provider value={{ orders_data, Orderdata, isCombine, setIsCombine, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, onChangeCustomerName, onDiscountChange, newVoucher, SplitVoucher, ComputeTotalAmount, SplitVoucherByAmount, RemoveVoucher, SplitVoucherByGuest, selectedTable, setSelectedTable , saveAllVoucher, loading, setLoading,}}>
+        <CashOrderContextProvider.Provider value={{ orders_data, Orderdata, isCombine, setIsCombine, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, onChangeCustomerName, onDiscountChange, newVoucher, SplitVoucher, ComputeTotalAmount, SplitVoucherByAmount, RemoveVoucher, SplitVoucherByGuest, selectedTable, setSelectedTable , saveAllVoucher, loading, setLoading,searchText, setSearchText}}>
             {children}
         </CashOrderContextProvider.Provider>
     )

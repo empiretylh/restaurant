@@ -14,6 +14,8 @@ import SetPaymentModal from './SetPaymentModal';
 import CustomerEditModal from './CustomerEditModal';
 import SelectedSalesModal from './SelectSalesModal.';
 import { useUserType } from '../../context/UserTypeProvider';
+import Bar from '../TopBar/Bar';
+import { IMAGE } from '../../config/image';
 const { ipcRenderer } = window.electron
 
 
@@ -103,7 +105,7 @@ const Customer = () => {
     const computeVouchersRemainingTotal = (sales=[]) => {
         let total = 0;
         sales?.map(item => {
-            total += parseInt(item.grandtotal) - parseInt(item.customer_payment);
+            total += parseInt(item.totalPrice) - parseInt(item.totalPayment);
         })
         return total;
     }
@@ -114,7 +116,7 @@ const Customer = () => {
         if (customer_data) {
             customer_data?.data?.data.map(item => {
                 item?.sales?.map(salesItem => {
-                    total += parseInt(salesItem.grandtotal) - parseInt(salesItem.customer_payment);
+                    total += parseInt(salesItem.totalPrice) - parseInt(salesItem.totalPayment);
                 })
             })
         }
@@ -168,18 +170,23 @@ const Customer = () => {
         , [])
 
     return (
-        <div className='flex flex-row h-screen'>
-            <Navigation />
-            <Loading show={loading} />
-            <div className="bg-white font-sans h-full w-full p-3 overflow-auto">
-                <div className="flex flex-row items-center bg-white ">
-                    <i className='bi bi-person text-2xl mr-2'></i>
-                    <h1 className='text-2xl font-bold'>{t('Customer')}</h1>
+        <div className='flex flex-col h-screen'>
+            <Bar >
+                <div className="flex flex-row items-center w-full">
+                    <img src={IMAGE.customer} style={{ width: 40 }} />
+                    <h1 className="text-xl font-bold ml-3">{t('Customer')}</h1>
+
 
                     <h1 className='text-lg font-bold text-right ml-auto' style={{ width: 180 }}>{numberWithCommas(AllVoucherRemaingTotal)} MMK</h1>
 
 
                 </div>
+
+            </Bar>
+          
+            <Loading show={loading} />
+            <div className="bg-white font-sans h-full w-full p-3 overflow-auto">
+              
 
                 {/*Search Bar */}
                 <div className='grid grid-cols-3 gap-3 mt-3'>

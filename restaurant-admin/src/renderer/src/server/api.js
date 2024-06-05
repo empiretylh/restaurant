@@ -4,7 +4,7 @@ const getTokenLocalStorage = () => {
     const token = localStorage.getItem('token');
     if (token === null) {
         return null;
-    }else{
+    } else {
         axios.defaults.headers.common['Authorization'] = `Token ${token}`;
     }
 
@@ -25,7 +25,7 @@ export const register = (data) => {
 
 export const createCompanyProfile = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/companyprofile/', data,{
+    return axios.post('/api/companyprofile/', data, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -40,37 +40,37 @@ export const getCompanyProfile = (data) => {
 }
 
 
-export const getAccounts = (data)=>{
+export const getAccounts = (data) => {
     getTokenLocalStorage();
     return axios.get('/api/accounts/', data);
 
 }
 
-export const deleteAccount = (data)=>{
+export const deleteAccount = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/accounts/?username='+ data.username)
+    return axios.delete('/api/accounts/?username=' + data.username)
 }
 
-export const putAccount = (data)=>{
+export const putAccount = (data) => {
     getTokenLocalStorage();
-    return axios.put('/api/accounts/',data)
+    return axios.put('/api/accounts/', data)
 }
 
-export const createKitchen = (data)=>{
+export const createKitchen = (data) => {
     getTokenLocalStorage();
     return axios.post('/api/kitchen/', data);
 }
 
 
-export const getKitchen = (data)=>{
+export const getKitchen = (data) => {
     getTokenLocalStorage();
     return axios.get('/api/kitchen/', data);
 }
 
 
-export const createFood = (data)=>{
+export const createFood = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/food/', data,{
+    return axios.post('/api/food/', data, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -78,18 +78,18 @@ export const createFood = (data)=>{
 
 }
 
-export const getFood = (data)=>{
+export const getFood = (data) => {
     getTokenLocalStorage();
-    return axios.get('/api/food/', data,{
+    return axios.get('/api/food/', data, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
     });
 }
 
-export const putFood = (data)=>{
+export const putFood = (data) => {
     getTokenLocalStorage();
-    return axios.put('/api/food/', data,{
+    return axios.put('/api/food/', data, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -97,79 +97,100 @@ export const putFood = (data)=>{
 
 }
 
-export const deleteFood = (data)=>{
+export const deleteFood = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/food/?ids='+data.id);
+    return axios.delete('/api/food/?ids=' + data.id);
 }
 
-export const createFloor = (data)=>{
+export const createFloor = (data) => {
     getTokenLocalStorage();
     return axios.post('/api/floor/', data);
 }
 
-export const getFloor = (data)=>{
+export const getFloor = (data) => {
     getTokenLocalStorage();
     return axios.get('/api/floor/', data);
 }
 
-export const putFloor = (data)=>{
+export const putFloor = (data) => {
     getTokenLocalStorage();
     return axios.put('/api/floor/', data);
 }
 
-export const deleteFloor = (data)=>{
+export const deleteFloor = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/floor/?id='+data.id);
+    return axios.delete('/api/floor/?id=' + data.id);
 }
 
-export const createTable = (data)=>{
+export const createTable = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/table/', data); 
+    return axios.post('/api/table/', data);
 }
 
-export const putTable = (data)=>{
+export const putTable = (data) => {
     getTokenLocalStorage();
     return axios.put('/api/table/', data);
 
 }
 
-export const deleteTable = (data)=>{
+export const deleteTable = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/table/?id='+data.id); 
+    return axios.delete('/api/table/?id=' + data.id);
 }
 
 
 
-export const getOrders = ({queryKey})=>{
+export const getOrders = ({ queryKey }) => {
     getTokenLocalStorage();
-    const [_, kitchen_id,time] = queryKey;
-    return axios.get('/api/sendorder/'+'?time='+time)
+    const [_, kitchen_id, time] = queryKey;
+    return axios.get('/api/sendorder/' + '?time=' + time)
 }
 
 
-export const postOrder = (data) =>{
+export const postOrder = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/orders/',data)
+    return axios.post('/api/orders/', data)
 
 }
 
 
-export const postItemDiscount = (data) =>{
+export const postItemDiscount = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/itemdiscount/',data)
+    return axios.post('/api/itemdiscount/', data)
 
 }
 
-export const postOrderPaid = (data)=>{
+export const postOrderPaid = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/orderscomplete/',data)
+    return axios.post('/api/orderscomplete/', data)
 }
 
-export const postDeliveryOrder = (data)=>{
+export const postDeliveryOrder = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/deliveryOrder/',data)
+    return axios.post('/api/deliveryOrder/', data)
 }
 
+export const deleteSendOrder = (data) => {
+    getTokenLocalStorage();
+    return axios.delete('/api/sendorder/?id=' + data?.id)
+
+}
+
+export const getVoucherData = ({ queryKey }) => {
+    const [_, time] = queryKey;
+    getTokenLocalStorage();
+    return axios.get('/api/orderscomplete/?time=' + time)
+}
+
+export const updateVoucherData = (data) => {
+    getTokenLocalStorage();
+    return axios.put('/api/orderscomplete/', data)
+}
+
+export const deleteVoucherData = (data)=>{
+    getTokenLocalStorage();
+    return axios.delete('/api/orderscomplete/', { data: data })
+}
 
 // ----------------------------------------------------------------------------
 
@@ -283,9 +304,9 @@ export const deleteExpense = (data) => {
     return axios.delete('/api/expenses/?id=' + data.id);
 }
 
-export const postOtherIncome = (data)=>{
+export const postOtherIncome = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/otherincome/', data);   
+    return axios.post('/api/otherincome/', data);
 }
 
 export const getOtherIncome = ({ queryKey }) => {
@@ -317,14 +338,14 @@ export const putCustomer = (data) => {
     return axios.put('/api/customer/', data);
 }
 
-export const deleteCustomer =  (data)=>{
+export const deleteCustomer = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/customer/?customerid='+data.id);
+    return axios.delete('/api/customer/?customerid=' + data.id);
 }
 
-export const deleteVoucherfromCustomer = (data)=>{
+export const deleteVoucherfromCustomer = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/customer/?customerid='+data.customerid+'&sales='+data.sales);
+    return axios.delete('/api/customer/?customerid=' + data.customerid + '&sales=' + data.sales);
 }
 
 export const getSales = ({ queryKey }) => {
@@ -339,52 +360,56 @@ export const putSales = (data) => {
 }
 
 
-export const postSupplier = (data)=>{
+export const postSupplier = (data) => {
     getTokenLocalStorage();
     return axios.post('/api/supplier/', data);
 }
 
-export const getSupplier = (data)=>{
+export const getSupplier = (data) => {
     getTokenLocalStorage();
     return axios.get('/api/supplier/', data);
 }
 
-export const putSupplier = (data)=>{
+export const putSupplier = (data) => {
     getTokenLocalStorage();
     return axios.put('/api/supplier/', data);
 }
 
-export const deleteSupplier = (data)=>{
+export const deleteSupplier = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/supplier/?supplier_id='+data.id);
+    return axios.delete('/api/supplier/?supplier_id=' + data.id);
 }
 
-export const deleteProductsFromSupplier = (data)=>{getTokenLocalStorage();
-    return axios.delete('/api/supplier/?supplier_id='+data.supplier_id+'&products='+data.products);
+export const deleteProductsFromSupplier = (data) => {
+    getTokenLocalStorage();
+    return axios.delete('/api/supplier/?supplier_id=' + data.supplier_id + '&products=' + data.products);
 }
 
-export const getProfit = (data) =>{getTokenLocalStorage();
+export const getProfit = (data) => {
+    getTokenLocalStorage();
     return axios.get('/api/profitnloss/', data);
 
 }
 
-export const deleteSales = (data) =>{getTokenLocalStorage();
-    return axios.delete('/api/sales/?id='+data.id);
+export const deleteSales = (data) => {
+    getTokenLocalStorage();
+    return axios.delete('/api/sales/?id=' + data.id);
 }
 
-export const getTopProduct = ({queryKey}) =>{getTokenLocalStorage();
+export const getTopProduct = ({ queryKey }) => {
+    getTokenLocalStorage();
     const [_, time] = queryKey;
-    return axios.get('/api/toproduct/?time='+time);
+    return axios.get('/api/toproduct/?time=' + time);
 }
 
-export const profileupdate = (data) =>{
+export const profileupdate = (data) => {
     getTokenLocalStorage();
     return axios.put('/api/profileupdate/', data);
 }
 
-export const profileimageupload = (data) =>{
+export const profileimageupload = (data) => {
     getTokenLocalStorage();
-    return axios.post('/api/profile/', data,{
+    return axios.post('/api/profile/', data, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -392,20 +417,20 @@ export const profileimageupload = (data) =>{
 }
 
 
-export const getPricing = (data) =>{
+export const getPricing = (data) => {
     getTokenLocalStorage();
     return axios.get('/api/pricing/', data);
 }
 
 
 
-export const postPricingRequest = (data) =>{
+export const postPricingRequest = (data) => {
     getTokenLocalStorage();
     return axios.post('/api/pricing/', data);
 }
 
 
-export const deletePricingRequest = (data) =>{
+export const deletePricingRequest = (data) => {
     getTokenLocalStorage();
-    return axios.delete('/api/pricing/?type='+data.id);
+    return axios.delete('/api/pricing/?type=' + data.id);
 }

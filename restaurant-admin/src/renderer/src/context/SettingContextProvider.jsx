@@ -17,7 +17,8 @@ const SettingDataProvider = ({ children }) => {
     paper: '58',
     footertext: 'Thank For You Shopping',
     printSilent: false,
-    enableCustomVoucher: false
+    enableCustomVoucher: false,
+    advancedSale: true,
   })
 
   //get settings data from localstorage

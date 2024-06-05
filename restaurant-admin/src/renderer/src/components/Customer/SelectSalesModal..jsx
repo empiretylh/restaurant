@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAlertShow } from '../custom_components/AlertProvider';
 import { useProductsData } from '../../context/ProductsDataProvider';
 import { useMutation, useQuery } from 'react-query';
-import { changePrice, getSales, postCustomer, putCustomer } from '../../server/api';
+import { changePrice, getSales, getVoucherData, postCustomer, putCustomer } from '../../server/api';
 import { useCustomerData } from '../../context/CustomerProvider';
 import numberWithCommas from '../custom_components/NumberWithCommas';
 
@@ -23,10 +23,10 @@ const SelectedSalesModal = ({ show, setShow, oldSalesData, customerid }) => {
     const [searchtext, setSearchtext] = useState('');
 
 
-    const sales_data = useQuery(['sales', type, time, startd, endd], getSales);
+    const voucher_data = useQuery(['voucher_data', time], getVoucherData);
 
     useEffect(() => {
-        sales_data.refetch();
+        voucher_data.refetch();
     }, [type, time, startd, endd])
 
     const UpdateCustomer = useMutation(putCustomer, {
@@ -46,19 +46,19 @@ const SelectedSalesModal = ({ show, setShow, oldSalesData, customerid }) => {
 
 
     const FilterSalesData = useMemo(() => {
-        // Compare two data `salesData` and `data` with receiptNumber and intereset the result
-        let salesData = sales_data?.data?.data?.DATA;
+        // Compare two data `salesData` and `data` with id and intereset the result
+        let salesData = voucher_data?.data?.data;
         console.log(salesData)
-        if (salesData?.length === 0) return sales_data;
+        // if (salesData?.length === 0) return voucher_data;
 
-        if (oldSalesData?.length === 0) return salesData;
+        // if (oldSalesData?.length === 0) return salesData;
 
 
 
         if (data) {
-            let finaldata = salesData?.filter(item => !oldSalesData?.find(dataItem => dataItem.receiptNumber == item.receiptNumber));
+            let finaldata = salesData?.filter(item => !oldSalesData?.find(dataItem => dataItem.id == item.id));
 
-            if (searchtext) finaldata = finaldata?.filter(item => item.voucherNumber.toLowerCase().includes(searchtext.toLowerCase()) || item.customerName.toLowerCase().includes(searchtext.toLowerCase()));
+            if (searchtext) finaldata = finaldata?.filter(item => searchtext.toLowerCase().includes(item.id) || item.customername.toLowerCase().includes(searchtext.toLowerCase()));
 
             return finaldata;
         }
@@ -66,7 +66,7 @@ const SelectedSalesModal = ({ show, setShow, oldSalesData, customerid }) => {
         return []
 
 
-    }, [sales_data.data, data, oldSalesData, searchtext]);
+    }, [voucher_data.data, data, oldSalesData, searchtext]);
 
     const inputRef = useRef(null);
     const handleInputChange = (event) => {
@@ -116,7 +116,7 @@ const SelectedSalesModal = ({ show, setShow, oldSalesData, customerid }) => {
                         {/* Unselect all button */}
                         <button className="bg-red-500 text-white px-2 p-2 rounded-md mr-2" onClick={() => setSelectedItem([])}>Unselect All</button>
                         {/* Select all button */}
-                        <button className="bg-green-500 text-white px-2 p-2 rounded-md" onClick={() => setSelectedItem(FilterSalesData.map(item => item.receiptNumber))}>Select All</button>
+                        <button className="bg-green-500 text-white px-2 p-2 rounded-md" onClick={() => setSelectedItem(FilterSalesData.map(item => item.id))}>Select All</button>
                     </div>
                     <h1 className="text-md font-bold">{selectedItem.length} Selected</h1>
                 </div>
@@ -127,15 +127,15 @@ const SelectedSalesModal = ({ show, setShow, oldSalesData, customerid }) => {
                         FilterSalesData?.map((item, index) => (
                             <div key={index} className="flex flex-row justify-between items-center p-2 border-b-2">
                                 <div className="flex flex-col">
-                                    <h1 className="text-xl font-bold">{item.voucherNumber}</h1>
+                                    <h1 className="text-xl font-bold">#{item.id}</h1>
                                     <p className="text-sm">{new Date(item.date).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex flex-col">
-                                    <h1 className="text-xl font-bold">{numberWithCommas(parseInt(item.grandtotal))} Ks</h1>
-                                    <p className="text-sm">{item.customerName}</p>
+                                    <h1 className="text-xl font-bold">{numberWithCommas(parseInt(item.totalPrice))} Ks</h1>
+                                    <p className="text-sm">{item.customername}</p>
                                 </div>
                                 <div className="flex flex-col">
-                                    <button className={`${selectedItem.includes(item.receiptNumber) ? 'bg-green-800' : 'bg-green-600'}  text-white px-2 p-2 rounded-md`} onClick={() => onSelectItem(item.receiptNumber)}>{selectedItem.includes(item.receiptNumber) ? 'Selected' : 'Select'}</button>
+                                    <button className={`${selectedItem.includes(item.id) ? 'bg-green-800' : 'bg-green-600'}  text-white px-2 p-2 rounded-md`} onClick={() => onSelectItem(item.id)}>{selectedItem.includes(item.id) ? 'Selected' : 'Select'}</button>
                                 </div>
                             </div>
                         )) :

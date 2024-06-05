@@ -1,17 +1,31 @@
-import react, { useState, useMemo, useContext } from 'react';
+import react, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import numberWithCommas from '../custom_components/NumberWithCommas';
 import Collapsible from 'react-collapsible'
 import { useMutation, useQuery } from 'react-query';
 import { CashOrderContextProvider } from '../../context/CashOrderContextProvider';
 import { postOrderPaid } from '../../server/api';
+import { useSetting } from '../../context/SettingContextProvider';
+import CustomModal from '../custom_components/CustomModal';
 
 
 const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = false, isDelivery = false, index, selectedVoucher, setSelectedVoucher }) => {
 
 
+	const [showAdvancedSale, setShowAdvancedSale] = useState(false);
+
+	const { settings, ChangeSettings } = useSetting()
+
 
 	const { orders_data, onChangeCustomerName, onDiscountChange, RemoveVoucher, loading, setLoading } = useContext(CashOrderContextProvider);
 
+
+	useEffect(()=>{
+		if(isDelivery){
+
+			onChangeCustomerName(data["0"]?.orders?.deliveryorder?.customername, data.voucherid);
+		}
+
+	},[isDelivery,data])
 
 	const SaveVoucher = useMutation(postOrderPaid, {
 		onMutate: (e) => {
@@ -20,10 +34,9 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 		onSuccess: (e) => {
 			RemoveVoucher(data?.voucherid)
 			setLoading(false)
-			orders_data.refetch()
 			if (isDelivery) {
 				orders_data.refetch()
-	
+
 			}
 		},
 		onError: (e) => {
@@ -60,9 +73,11 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 		SaveVoucher.mutate({
 			order_ids: data.combine_realorderid,
 			table_ids: data.combine_tableid,
-			customername: data.customername,
+			customername: data.customername || data["0"]?.orders.deliveryorder.customername,
+
 			totalPrice: data?.splitbill || computeTotalPrice,
 			isDelivery: isDelivery,
+			delivery: 0 || data["0"]?.orders?.deliveryorder?.deliveryCharges,
 
 		})
 	}
@@ -155,9 +170,165 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 		);
 	};
 
+	const AdvancedSale = () => {
+		const [discount, setDiscount] = useState(0);
+		const [delivery, setDelivery] = useState(0);
+		const [payment, setPayment] = useState(0);
+		const [paymentType, setPaymentType] = useState("Cash");
+		const discountRef = useRef(null);
+		const [description, setDescription] = useState("")
+
+		useEffect(()=>{
+			if(isDelivery){	
+				setDelivery(data["0"]?.orders?.deliveryorder?.deliveryCharges)
+			}
+		},[isDelivery, data])
+
+		const { settings, ChangeSettings } = useSetting()
+
+
+
+		const computeFinalPrice = useMemo(() => {
+			let OrignalPrice = data?.splitbill || computeTotalPrice;
+			let discount_value = parseFloat(discount)
+			let discounts = isNaN(discount_value) ? 0 : Math.round((parseFloat(OrignalPrice) * discount_value / 100), 2)
+			let finalPrice = parseInt(OrignalPrice) - parseInt(discounts);
+			let delivery_value = parseInt(delivery);
+			finalPrice = finalPrice + (isNaN(delivery_value) ? 0 : delivery_value);
+			return finalPrice;
+		}, [discount, delivery])
+
+
+		useEffect(() => {
+			if (discountRef.current) {
+				discountRef.current.focus();
+				//select all
+				discountRef.current.select();
+			}
+		}, [showAdvancedSale])
+
+		const Remaingamount = useMemo(() => {
+			return (isNaN(parseInt(computeFinalPrice) - parseInt(payment)) ? 0 : parseInt(computeFinalPrice) - parseInt(payment));
+		}, [payment, computeFinalPrice])
+		return <div
+			className={`fixed top-0 left-0 w-full h-full bg-gray-500 bg-opacity-50 flex justify-center items-center scale-0 duration-300 ${showAdvancedSale ? 'scale-100' : ''} overflow-auto`}
+
+			style={{
+				zIndex: 1,
+			}}>
+
+
+			{/* include totalPirce discount value and delivery fields and submit button*/}
+			<div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6 mt-10">
+				<div className='w-full flex flex-row items-center mb-4'>
+					<h2 className="text-xl font-bold  flex flex-row items-center">
+						<icon className="bi bi-cash-coin mr-2"></icon>
+						Advanced Sale</h2>
+					<icon className="bi bi-x-circle text-xl text-red-600 hover:text-red-800 ml-auto" onClick={() => setShowAdvancedSale(false)}></icon>
+				</div>
+				<div className="mb-4">
+					<label className="block text-gray-700">Grand Total Price: <span className="font-semibold">{numberWithCommas(data?.splitbill || computeTotalPrice)} Ks</span></label>
+				</div>
+				<form onSubmit={(e) => {
+					e.preventDefault();
+					SaveVoucher.mutate({
+						order_ids: data.combine_realorderid,
+						table_ids: data.combine_tableid,
+						customername: data.customername || data["0"]?.orders.deliveryorder.customername,
+						totalPrice: data?.splitbill || computeTotalPrice,
+						isDelivery: isDelivery,
+						discount: discount,
+						delivery: delivery,
+						totalPayment: payment,
+						paymentype: paymentType,
+						description: description
+					});
+					setShowAdvancedSale(false);
+
+				}}>
+
+					<div className="mb-4">
+						<label className="block text-gray-700">Discount (%)</label>
+						<input
+							type="number"
+							ref={discountRef}
+							value={discount}
+							onChange={(e) => setDiscount(e.target.value)}
+							className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Enter discount"
+						/>
+					</div>
+					<div className="mb-4">
+						<label className="block text-gray-700">Delivery</label>
+						<input
+							type="number"
+							value={delivery}
+							onChange={(e) => setDelivery(e.target.value)}
+							className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Enter delivery amount"
+						/>
+					</div>
+					<div className="mb-4">
+						<label className="block text-gray-700">Total Price: <span className="font-semibold">{numberWithCommas(computeFinalPrice)} Ks</span></label>
+					</div>
+					<div className="mb-4">
+						<label className="block text-gray-700">Payment</label>
+						<input
+							type="number"
+							value={payment}
+							onChange={(e) => setPayment(e.target.value)}
+							className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Enter payment amount"
+						/>
+					</div>
+					<div className="mb-4">
+						<label className="block text-gray-700">Payment Type</label>
+						<select
+							value={paymentType}
+							onChange={(e) => setPaymentType(e.target.value)}
+							className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+						>
+							<option value="Cash">Cash</option>
+							<option value="Wallet">Wallet</option>
+							<option value="KBZ Pay">KBZ Pay</option>
+							<option value="AYA Pay">AYA Pay</option>
+							<option value="Wave Pay">Wave Pay</option>
+							<option value="Other">Other</option>
+						</select>
+					</div>
+					<div className="mb-4">
+						<label className="block text-gray-700">Remaining Amount: <span className={`font-semibold ${Remaingamount < 0 ? 'text-red-500' : 'text-green-500'}`}>{numberWithCommas(Remaingamount)} Ks</span></label>
+					</div>
+					<div className="mb-4">
+						<label className="block text-gray-700">Description</label>
+						<textarea
+							value={description}
+							onChange={(e) => setDescription(e.target.value)}
+							className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Enter description"
+						/>
+					</div>
+
+
+					<button className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+						Submit
+					</button>
+
+				</form>
+				<div className='flex flex-row items-center justify-center mt-2'>
+					{/* checkbox with don't show advance sale text */}
+					<input type="checkbox" className=" mr-1" id="dontShowAdvanceSale" name="dontShowAdvanceSale" value={settings?.advancedSale} checked={settings?.advancedSale} onChange={e => {
+						ChangeSettings(e.target.checked, "advancedSale")
+					}} />
+					<label htmlFor="dontShowAdvanceSale" className="text-sm text-gray-700">Don't show this again</label>
+				</div>
+			</div>
+		</div>
+	}
+
 	return (
 		<div className='bg-white shadow-lg w-full  border p-2 relative'>
-
+			<AdvancedSale />
 			<div className='flex flex-row items-center'>
 
 				<div>
@@ -178,12 +349,15 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 			<div className='p-1'>
 				{data?.orders?.map((item) =>
 					<OrderItem item={item} />)}
-
-
 			</div>
 			<div className='w-full p-1 flex flex-row gap-2 items-center'>
 				<button onClick={() => {
-					onSaveVoucher();
+					console.log(settings.advancedSale)
+					if (settings.advancedSale) {
+						setShowAdvancedSale(true)
+					} else {
+						onSaveVoucher();
+					}
 				}} className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
 					<icon className="bi bi-save" />
 					Save

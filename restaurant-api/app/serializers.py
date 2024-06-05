@@ -136,7 +136,7 @@ class RealOrderSerializer(serializers.ModelSerializer):
 
 class SaveVoucherHistorySerializer(serializers.ModelSerializer):
 
-    order = RealOrderSerializer(read_only=True)
+    order = RealOrderSerializer(read_only=True, many=True)
 
     class Meta:
         model = models.SaveVoucherHistory()
@@ -160,7 +160,7 @@ class SalesSerializer(serializers.ModelSerializer):
                   'tax','isDiscountAmount', 'discount', 'grandtotal', 'deliveryCharges', 'date', 'description','customer_payment']
 
 class CustomerSerializer(serializers.ModelSerializer):
-    sales = SalesSerializer(many=True, read_only=True)
+    sales = SaveVoucherHistorySerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CustomerName()

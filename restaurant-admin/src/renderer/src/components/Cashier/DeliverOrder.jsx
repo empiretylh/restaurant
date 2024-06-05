@@ -165,7 +165,7 @@ const DeliverOrder = ({ open, setOpen }) => {
                             }}>
                                 <i className="bi bi-x" />
                             </button>
-                            <button type="button"lassName="p-2 bg-gray-300 border hover:bg-gray-200" onClick={e => {
+                            <button type="button" className="p-2 bg-gray-300 border hover:bg-gray-200" onClick={e => {
                                 e.preventDefault();
                                 setIsWaiterOpen(true)
                             }}>
