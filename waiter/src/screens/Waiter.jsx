@@ -9,7 +9,7 @@ import { useCategoryData } from "../context/CategoryDataProvider";
 import { useProductsData } from "../context/ProductsDataProvider";
 import { useEffect } from "react";
 import Collapsible from "react-collapsible";
-import { newSocketWaiter, sendToAdmin, sendToKitchen } from "../websocket";
+import { initWebSocket, newSocketWaiter, sendToAdmin, sendToKitchen } from "../websocket";
 
 
 const Waiter = () => {
@@ -370,6 +370,7 @@ const Waiter = () => {
     };
 
     useEffect(() => {
+        initWebSocket();
         newSocketWaiter.onmessage = (event) => {
             console.log(event.data, "data")
             order_data.refetch()
