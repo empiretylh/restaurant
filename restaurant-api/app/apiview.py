@@ -997,7 +997,9 @@ class SendOrder(APIView):
 
     def post(self, request):
         orderdetail_id = request.data.get('order_id')
+        guest = request.data.get('guest', 1)
         Order = models.OrderDetail.objects.get(id=orderdetail_id)
+        Order.guest = guest
         Order.isOrder = True
         Order.save()
         try:
