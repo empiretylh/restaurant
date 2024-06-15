@@ -6,6 +6,7 @@ import { CashOrderContextProvider } from '../../context/CashOrderContextProvider
 import { postOrderPaid } from '../../server/api';
 import { useSetting } from '../../context/SettingContextProvider';
 import CustomModal from '../custom_components/CustomModal';
+import { sendToWaiter } from '../../websocket';
 
 
 const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = false, isDelivery = false, index, selectedVoucher, setSelectedVoucher }) => {
@@ -358,6 +359,8 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 					} else {
 						onSaveVoucher();
 					}
+					
+					sendToWaiter('reload')
 				}} className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
 					<icon className="bi bi-save" />
 					Save

@@ -22,7 +22,7 @@ import CashierDeliveryTable from './CashierDeliveryTable';
 import HistoryTable from './HistoryTable';
 import Expense from '../Expense/Expense';
 import OtherIncome from '../OtherIncome/OtherIncome';
-import { newSocketAdmin } from '../../websocket';
+import { newSocketAdmin, sendToWaiter } from '../../websocket';
 import { useAlertShow } from '../custom_components/AlertProvider';
 
 const Cashier = () => {
@@ -85,6 +85,8 @@ const Cashier = () => {
 			if(message?.type == 'paid'){
 				orders_data.refetch()
 				showInfo('Ready To Paid',message?.text)
+				orders_data.refetch()
+
 				showNoti(message?.text, 'bi bi-check-circle-fill text-green-500')
 			}
 		}
@@ -219,6 +221,7 @@ const Cashier = () => {
 							<i class="bi bi-app"></i> New Orders</h1>
 						<h1 className={`text-md text-center p-2 border-b cursor-pointer hover:border-b-2  hover:border-blue-500`} onClick={() => {
 							saveAllVoucher();
+							sendToWaiter('reload')
 						}}>
 							<i class="bi bi-memory"></i> Save All</h1>
 					</div>
