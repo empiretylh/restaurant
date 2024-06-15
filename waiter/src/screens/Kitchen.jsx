@@ -609,7 +609,7 @@ const Kitchen = () => {
                 ) : (
                     <div className="flex flex-row">
                         <div className="flex flex-row flex-wrap gap-2 p-10 justify-center items-center w-full">
-                            {OrderDataFilter.filter(i=> !i?.isPaid)?.map((item) => (
+                            {OrderDataFilter?.filter(i=> !i?.isPaid)?.map((item) => (
                                 <OrderItem item={item} />
                             ))}
                         </div>

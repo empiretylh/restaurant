@@ -401,12 +401,34 @@ const Waiter = () => {
     };
   }, []);
 
+  const [focusonSearchBar, setFocusonSearchBar] = useState(false);
+
+//   when focus on searchbar floor is not show
+
   return (
     <div className="bg-gray-300 w-full h-full flex flex-col">
       <div className="bg-white p-1 px-2 flex flex-row items-center gap-3 shadow-lg">
         <img src={IMAGE.waiter} style={{ width: 45, height: 45 }} />
         <h1 className="text-md font-semibold">Waiter</h1>
-
+        { (isMobileScreenSize && !focusonSearchBar) &&  
+            <select
+            className="w-full p-2"
+            value={selectedFloor}
+            onChange={(e) => {
+              setSelectedFloor(e.target.value);
+              localStorage.setItem("floor_id", e.target.value);
+            }}
+          >
+            <option>Select Floor</option>
+            {floors?.map((floor, index) => {
+              return (
+                <option key={index} value={floor.id}>
+                  {floor.name}
+                </option>
+              );
+            })}
+          </select>
+        }
         <div className="w-full flex flex-row items-center gap-2 p-1">
           <i className="bi bi-search"></i>
           <input
@@ -414,6 +436,8 @@ const Waiter = () => {
             className="w-full p-2 rounded border"
             placeholder="Search Foods"
             value={searchFoodText}
+            onFocus={() => setFocusonSearchBar(true)}
+            onBlur={() => setFocusonSearchBar(false)}
             onChange={(e) => setSearchFoodText(e.target.value)}
           />
         </div>
@@ -435,6 +459,8 @@ const Waiter = () => {
         className={`w-full ${isMobileScreenSize ? '' :' grid grid-cols-6'} shadow-lg overflow-y-hidden `}
         style={{ height: "calc(100vh - 55px)" }}
       >
+
+     
         {!isMobileScreenSize && (
           <div className="w-full bg-white flex flex-col  ">
             <div className="flex flex-row items-center border">
@@ -519,6 +545,8 @@ const Waiter = () => {
           </div>
         )}
 
+        
+
         <div
           className={`w-full ${
             isMobileScreenSize ? "col-span-6" : "col-span-5"
@@ -537,7 +565,7 @@ const Waiter = () => {
                   {selectedTable?.name} Order
                 </h1>
 
-                <select className="border p-1 ml-auto" value={selectedGuest} onClick={(e)=>{
+                <select className="border p-1 ml-auto"   onClick={(e)=>{
                     setSelectedGuest(e.target.value);
                 }}>
                   {[...Array(10).keys()]
@@ -578,7 +606,7 @@ const Waiter = () => {
                       onClick={() => {
                         send_order.mutate({
                           order_id: orderid,
-                          guest : 1
+                          guest : selectedGuest
                         });
                       }}
                     >
@@ -590,6 +618,7 @@ const Waiter = () => {
                     onClick={() => {
                       send_order.mutate({
                         order_id: orderid,
+                        guest : selectedGuest
                       });
                       sendToAdmin(
                         JSON.stringify({
