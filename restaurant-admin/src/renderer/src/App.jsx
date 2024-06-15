@@ -47,8 +47,8 @@ function App() {
                           <AccountsDataProvider>
                             <CashOrderProvider>
                               <VoucherContextProvider>
-                                {/*   <ExpenseDataProvider> */}
-                                {/*     <OtherIncomeDataProvider> */}
+                                  <ExpenseDataProvider>
+                                    <OtherIncomeDataProvider>
                                 <CustomerDataProvider>
                                   {/*         <CartContextProvider> */}
                                   {/*           <CustomVoucherDataProvider> */}
@@ -56,8 +56,8 @@ function App() {
                                   {/*           </CustomVoucherDataProvider> */}
                                   {/*         </CartContextProvider> */}
                                 </CustomerDataProvider>
-                                {/*     </OtherIncomeDataProvider> */}
-                                {/*   </ExpenseDataProvider> */}
+                                    </OtherIncomeDataProvider>
+                                  </ExpenseDataProvider>
                               </VoucherContextProvider>
                             </CashOrderProvider>
                           </AccountsDataProvider>

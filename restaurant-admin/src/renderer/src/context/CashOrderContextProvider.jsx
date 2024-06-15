@@ -2,6 +2,7 @@ import react, { createContext, useContext, useEffect, useMemo, useState } from '
 import { getOrders, postItemDiscount, postOrderPaid } from '../server/api';
 import { useAuth } from './AuthContextProvider';
 import { useQuery, useMutation } from 'react-query';
+import { sendToKitchen, sendToWaiter } from '../websocket';
 
 export const CashOrderContextProvider = createContext();
 
@@ -11,7 +12,7 @@ const CashOrderProvider = ({ children }) => {
     const [selectedTable, setSelectedTable] = useState(0);
     const [isCombine, setIsCombine] = useState(false)
     const [selectedRows, setSelectedRows] = useState([]);
-    const [time, setTime] = useState('today')
+    const [time, setTime] = useState('week')
     const [Voucher, setVoucher] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState('');
@@ -190,6 +191,8 @@ const CashOrderProvider = ({ children }) => {
 		onSuccess:(e)=>{
 			orders_data.refetch(); 
             setLoading(false);
+            sendToKitchen('reload')
+            sendToWaiter('reload')
 
 		},
 		onError:(e)=>{

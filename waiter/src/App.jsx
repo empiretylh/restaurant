@@ -18,6 +18,9 @@ import CategoryDataProvider from './context/CategoryDataProvider';
 import ProductsDataProvider from './context/ProductsDataProvider';
 import ProfileDataProvider from './context/ProfileDataProvider';
 
+import { initWebSocket } from './websocket';
+import AlertShowProvider from './screens/component/AlertProvider';
+
 axios.defaults.baseURL = API;
 
 const queryClient = new QueryClient();
@@ -36,7 +39,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
      <ProfileDataProvider>
-       
+       <AlertShowProvider>
+        
       <CategoryDataProvider>
         <ProductsDataProvider>
           <KitchenDataProvider>
@@ -67,6 +71,7 @@ function App() {
 
       </CategoryDataProvider>
 
+       </AlertShowProvider>
      </ProfileDataProvider>
 
     </QueryClientProvider>

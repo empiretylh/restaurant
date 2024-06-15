@@ -17,7 +17,7 @@ import Customer from '../assets/icon/customer.png';
 import Supplier from '../assets/icon/supplier.png';
 import Voucher from '../assets/icon/voucher.png';
 import Report from '../assets/icon/report.png';
-
+import Garbage from '../assets/icon/garbage.png'
 export const IMAGE = {
     app_icon: appicon,
     kitchen : kitchen,
@@ -37,6 +37,7 @@ export const IMAGE = {
     customer:Customer,
     supplier:Supplier,
     voucher:Voucher,
-    report:Report
+    report:Report,
+    garbage:Garbage
 
 }

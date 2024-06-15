@@ -9,6 +9,8 @@ import { useCategoryData } from "../context/CategoryDataProvider";
 import { useProductsData } from "../context/ProductsDataProvider";
 import { useEffect } from "react";
 import Collapsible from "react-collapsible";
+import { newSocketWaiter, sendToAdmin, sendToKitchen } from "../websocket";
+
 
 const Waiter = () => {
     const [loading, setLoading] = useState(true);
@@ -92,11 +94,11 @@ const Waiter = () => {
         data = data[0]?.tables
             ?.sort((a, b) => a.name.localeCompare(b.name))
             .filter((item) =>
-            item.name.toLowerCase().includes(searchText.toLowerCase())
+                item.name.toLowerCase().includes(searchText.toLowerCase())
             );
 
         return data;
-    }, [selectedFloor, floors, searchText]);
+    }, [selectedFloor, floors, searchText, order_data]);
 
     const post_order = useMutation(postOrder, {
         onMutate: (data) => {
@@ -117,7 +119,7 @@ const Waiter = () => {
     });
 
 
-     const send_order = useMutation(sendOrder, {
+    const send_order = useMutation(sendOrder, {
         onMutate: (data) => {
             setLoading(true);
             console.log(data);
@@ -128,6 +130,7 @@ const Waiter = () => {
             setLoading(false);
             order_data.refetch();
             floor_data.refetch();
+            sendToKitchen('reload')
         },
         onError: (error) => {
             console.log(error);
@@ -153,7 +156,7 @@ const Waiter = () => {
     });
 
 
-    const CardFoodItem = ({ item , ispd = false }) => {
+    const CardFoodItem = ({ item, ispd = false }) => {
         return (
             <div
                 onClick={() => {
@@ -195,7 +198,7 @@ const Waiter = () => {
     const [orderid, setOrderid] = useState(0)
     const [isOrder, setIsOrder] = useState(false)
 
-   
+
 
     const OrderFilters = useMemo(() => {
         if (!order_data.data) {
@@ -250,7 +253,7 @@ const Waiter = () => {
         const Head = () => {
             return (
                 <div className="w-full flex flex-col items-center mt-1 border p-1">
-                    
+
                     <div className="flex flex-row w-full items-center">
                         <div
                             onClick={() => {
@@ -366,6 +369,15 @@ const Waiter = () => {
         );
     };
 
+    useEffect(() => {
+        newSocketWaiter.onmessage = (event) => {
+            console.log(event.data, "data")
+            order_data.refetch()
+            floor_data.refetch();
+
+        }
+    }, [])
+
     return (
         <div className="bg-gray-300 w-full h-full flex flex-col">
             <div className="bg-white p-1 px-2 flex flex-row items-center gap-3 shadow-lg">
@@ -401,7 +413,7 @@ const Waiter = () => {
                                 );
                             }}
                         >
-                        <option>Select Floor</option>
+                            <option>Select Floor</option>
                             {floors?.map((floor, index) => {
                                 return (
                                     <option key={index} value={floor.id}>
@@ -426,7 +438,7 @@ const Waiter = () => {
                         >
                             {FilterSelectedFloorTable?.map((item) => (
                                 <div
-                                    className={`w-full  h-20 flex border items-center justify-center relative cursor-pointer hover:bg-gray-200 p-1 ${item.status ? 'border-red-500 border-4':''} rounded ${selectedTable?.id == item.id ? "bg-green-300" : ""} `}
+                                    className={`w-full  h-20 flex border items-center justify-center relative cursor-pointer hover:bg-gray-200 p-1 ${item.status ? 'border-red-500 border-4' : ''} rounded ${selectedTable?.id == item.id ? "bg-green-300" : ""} `}
                                     onClick={() =>
                                         setSelectedTable((i) => {
                                             if (i?.id == item.id) {
@@ -476,28 +488,43 @@ const Waiter = () => {
                             ))}
 
                             {/* buttons */}
-                            <div className="mt-auto flex-row flex gap-1 items-center ">
+                            <div className="mt-auto flex-col flex gap-1 items-center ">
+                                <div className="flex flex-row gap-1 w-full">
+
+                                    <button
+                                        className="py-2 px-1 bg-red-500 text-white rounded-lg "
+                                        onClick={() => {
+                                            clear_order.mutate({
+                                                table_id: selectedTable?.id,
+                                            });
+                                        }}
+                                    >
+                                        <icon className="bi bi-x-circle"></icon>
+
+                                    </button>
+                                    <button
+                                        className=" p-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg w-full"
+                                        onClick={() => {
+                                            send_order.mutate({
+                                                order_id: orderid
+                                            })
+                                        }}
+                                    >
+                                        Order To Kitchen
+                                    </button>
+                                </div>
                                 <button
-                                    className="py-2 px-1 bg-red-500 text-white rounded-lg flex gap-2 items-center flex-row"
+                                    className="w-full p-3 bg-orange-500 hover:bg-orange-400 text-white rounded-lg"
                                     onClick={() => {
-                                        clear_order.mutate({
-                                            table_id: selectedTable?.id,
-                                        });
+                                        send_order.mutate({
+                                            order_id: orderid
+                                        })
+                                        sendToAdmin(JSON.stringify({ type: 'paid', table_name: selectedTable?.name, text: selectedTable?.name + " is ready to pay. Total is " + totalOrder + " Ks." }))
+
                                     }}
                                 >
-                                    <icon className="bi bi-x-circle"></icon>
-                                   
+                                    Pay {totalOrder} Ks
                                 </button>
-                              {isOrder ? null:  <button
-                                                                  className="w-full p-2 bg-blue-500 text-white rounded-lg"
-                                                                  onClick={() => {
-                                                                      send_order.mutate({
-                                                                          order_id : orderid
-                                                                      })
-                                                                  }}
-                                                              >
-                                                                  Order
-                                                              </button>}
                             </div>
                         </div>
                     </div>

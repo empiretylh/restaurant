@@ -21,7 +21,7 @@ const ProfitnLossTable = ({ data, searchtext = '', sortby = 'name', selectedRow,
 
 
 
-    return (<div className={`w-full overflow-auto my-2 absolute h-full`}>
+    return (<div className={`w-full overflow-auto my-2 h-full`}>
         <div className='w-full h-full'>
             <table className={`w-full ${data?.length > 10 ? 'h-full' : ''}`}>
                 <thead className='bg-primary sticky top-0 text-white'>
@@ -43,7 +43,7 @@ const ProfitnLossTable = ({ data, searchtext = '', sortby = 'name', selectedRow,
 
                             <td className='border px-2 py-1 text-right'>{numberWithCommas(item.minus)}</td>
 
-                            <td className={`border px-2 py-1 text-center ${(parseInt(item.plus) - parseInt(item.minus)) > 0 ?'bg-green-500 text-white' : 'bg-red-500 text-white' }`}>{numberWithCommas(parseInt(item.plus) - parseInt(item.minus))}</td>
+                            <td className={`border px-2 py-1 text-center ${(parseInt(item.plus) - parseInt(item.minus)) > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{numberWithCommas(parseInt(item.plus) - parseInt(item.minus))}</td>
 
                         </tr>
                     )) :

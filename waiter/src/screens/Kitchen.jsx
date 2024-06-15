@@ -21,6 +21,7 @@ import { AuthContext } from "../context/AuthProvider"
 import { useEffect } from "react";
 import Collapsible from "react-collapsible";
 import CustomModal from './component/CustomModal'
+import { newSocketKitchen, sendToWaiter } from "../websocket";
 
 function timeSince(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -127,13 +128,16 @@ const Kitchen = () => {
     const [selectedType, setSelectedType] = useState("All");
 
     const ItemSendOrder = useMutation(kitchenPutOrder, {
-        onMutate: () => {
+        onMutate: (e) => {
             setLoading(true);
         },
         onSuccess: (res) => {
             setLoading(false);
             console.log(res);
             ordersdata.refetch();
+            sendToWaiter('Start Cooking Order....')
+
+             
         },
         onError: (err) => {
             setLoading(false);
@@ -142,13 +146,15 @@ const Kitchen = () => {
     });
 
     const startCooking = useMutation(putstartCooking, {
-        onMutate: () => {
+        onMutate: (data) => {
+            
             setLoading(true);
         },
         onSuccess: (res) => {
             setLoading(false);
             console.log(res);
             ordersdata.refetch();
+            sendToWaiter('Start Cooking Order....')
         },
         onError: (err) => {
             setLoading(false);
@@ -188,8 +194,9 @@ const Kitchen = () => {
 
             result = result?.filter((i) => i.show);
 
+
             if (selectedType == "Active") {
-                return result?.filter((i) => i.isCooking && !i.isFinish);
+                return result?.filter((i) =>  !i.isFinish);
             } else if (selectedType == "Completed") {
                 return result?.filter((i) => i.isFinish && i.isFinish);
             } else {
@@ -318,6 +325,14 @@ const Kitchen = () => {
                 </div>
             );
         };
+
+
+        useEffect(()=>{
+            newSocketKitchen.onmessage = (event) => {
+                console.log(event.data);
+                ordersdata.refetch()
+            }
+        },[])
 
         return (
             <div className="w-[280px] min-h-[130px] shadow-lg bg-white">
@@ -594,7 +609,7 @@ const Kitchen = () => {
                 ) : (
                     <div className="flex flex-row">
                         <div className="flex flex-row flex-wrap gap-2 p-10 justify-center items-center w-full">
-                            {OrderDataFilter?.map((item) => (
+                            {OrderDataFilter.filter(i=> !i?.isPaid)?.map((item) => (
                                 <OrderItem item={item} />
                             ))}
                         </div>

@@ -165,7 +165,18 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CustomerName()
         fields = ['id','name','description', 'sales']
+    
+class WasteProductSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(many=False, read_only=True)
+    
+    class Meta:
+        model = models.WasteProduct()
+        fields = ['id','product','unit','cost','date','description']
 
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Notification()
+        fields = ['id','title','message','keyword','date']
 
 class SupplierSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)

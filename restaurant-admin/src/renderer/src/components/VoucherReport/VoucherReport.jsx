@@ -26,11 +26,13 @@ const VoucherReport = () => {
 	const voucher_data = useQuery(['voucher', time], getVoucherData);
 	const [showVoucherDetail, setShowVoucherDetail] = useState(false);
 	const [voucherData, setVoucherData] = useState([])
+	const [infoVoucherData, setInfoVoucherData] = useState() // include all the data of the voucher
 	const [showEdit, setShowEdit] = useState(false);
 	const [showEditData, setShowEditData] = useState([]);
 	const [ispd, setIspd] = useState(false);
 	const [Voucher, setVoucher] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [isShowMore, setIsShowMore] = useState(false);
 
 	const handleFilterChange = (e) => {
 		setFilters({
@@ -181,51 +183,38 @@ const VoucherReport = () => {
 
 	const ComputeTotalPrice = useMemo(() => {
 		let total = 0;
-	
 
-			Voucher?.orders?.map((item) => {
-				total += parseInt(computePrice(item?.discount, item.total_price));
-			})
-		
+
+		Voucher?.orders?.map((item) => {
+			total += parseInt(computePrice(item?.discount, item.total_price));
+		})
+
 		return total;
 	}, [Voucher])
 
 	const OrderItem = ({ item, ispd = false }) => {
 
-		useEffect(()=>{
-			console.log("Orider item",item)
-		},[])
+		useEffect(() => {
+			console.log("Orider item", item)
+		}, [])
 
 		const Head = () => {
 			return (
-				<div className="w-full flex flex-col items-center mt-1 border p-1">
-
-
-					<div className="grid grid-cols-4 w-full items-center">
-						<div className="flex flex-row items-left">
-
-
-							<h1 className="text-md font-bold ">
-								{ispd ? item?.product?.name : item?.food?.name}
-							</h1>
-						</div>
-						<h1 className="text-md text-black text-center">
-							{item?.qty} x
-						</h1>
-						<div className='flex flex-row items-center'>
-
-							<h1 className="text-md ml-auto">{numberWithCommas(computePrice(item?.discount, item?.total_price))}</h1>
-
-						</div>
-						<div className='ml-auto bg-gray-300 hover:bg-gray-200' onClick={() => {
+				<tr>
+					<td class="border-b p-2">{ispd ? item?.product?.name : item?.food?.name}</td>
+					<td class="border-b p-2">{item.qty}x</td>
+					<td class="border-b p-2">{numberWithCommas(computePrice(item?.discount, item?.total_price))}</td>
+					<td className='border-b p-2'>
+						<div onClick={() => {
 							setShowEdit(true);
 							setShowEditData(item);
 							setIspd(ispd);
-						}}>
-							<i class="bi bi-three-dots-vertical"></i>
+						}} className="cursor-pointer hover:bg-gray-200 p-2 text-center rounded">
+							<i class="bi bi-pencil"></i> Edit
 						</div>
-					</div>
-				</div>
+					</td>
+				</tr>
+
 			);
 		};
 
@@ -233,7 +222,24 @@ const VoucherReport = () => {
 	};
 
 
-	const VoucherUpdate =  useMutation(updateVoucherData,{
+	const VoucherUpdate = useMutation(updateVoucherData, {
+		onMutate: (data) => {
+			setLoading(true)
+		},
+		onSuccess: (data) => {
+			setLoading(false)
+			setVoucher([]);
+			voucher_data.refetch();
+			setSelectedid(null)
+		},
+		onError: (error) => {
+			setLoading(false)
+
+			alert('Error updating voucher' + error)
+		}
+	})
+
+	const VoucherDelete = useMutation(deleteVoucherData, {
 		onMutate: (data) => {
 			setLoading(true)
 		},
@@ -245,47 +251,77 @@ const VoucherReport = () => {
 		onError: (error) => {
 			setLoading(false)
 
-			alert('Error updating voucher'+ error)
+			alert('Error deleting voucher' + error)
 		}
 	})
 
-	const VoucherDelete = useMutation(deleteVoucherData,{
-		onMutate: (data) => {
-			setLoading(true)
-		},
-		onSuccess: (data) => {
-			setLoading(false)
-			setVoucher([]);
-			voucher_data.refetch();
-		},
-		onError: (error) => {
-			setLoading(false)
-
-			alert('Error deleting voucher'+ error)
-		}
-	})
-
-	const onVoucherUpdate = (remove_item_qty, waste_item_qty, item_ids, type="product") => {
+	const onVoucherUpdate = (remove_item_qty, waste_item_qty, item_ids, type = "product") => {
 		VoucherUpdate.mutate({
-			voucher_id : selectedid,
-			remove_item_id : item_ids,
-			remove_item_qty : remove_item_qty, 
-			waste_item_qty : waste_item_qty,
-			remove_item_type : type
+			voucher_id: selectedid,
+			remove_item_id: item_ids,
+			remove_item_qty: remove_item_qty,
+			waste_item_qty: waste_item_qty,
+			remove_item_type: type
 
 
 		})
 	}
 
-	const onDeleteVoucher = ()=>{
-		let result =  confirm("Are you sure you want to delete this voucher?")
+	const onDeleteVoucher = () => {
+		let result = confirm("Are you sure you want to delete this voucher?")
 		if (!result) return;
 
 		VoucherDelete.mutate({
-			voucher_id :selectedid
+			voucher_id: selectedid
 		})
 	}
-	
+
+	const onChangeInfoVoucher = (e) => {
+		setInfoVoucherData({
+			...infoVoucherData,
+			[e.target.id]: e.target.value
+		})
+	}
+
+
+
+	// const computeFinalPrice = useMemo(() => {
+	// 	let OrignalPrice = data?.splitbill || computeTotalPrice;
+	// 	let discount_value = parseFloat(discount)
+	// 	let discounts = isNaN(discount_value) ? 0 : Math.round((parseFloat(OrignalPrice) * discount_value / 100), 2)
+	// 	let finalPrice = parseInt(OrignalPrice) - parseInt(discounts);
+	// 	let delivery_value = parseInt(delivery);
+	// 	finalPrice = finalPrice + (isNaN(delivery_value) ? 0 : delivery_value);
+	// 	return finalPrice;
+	// }, [discount, delivery])
+
+
+
+
+	const computeFinalPrice = useMemo(() => {
+		let finalPrice = 0;
+		if (infoVoucherData) {
+			let discounts = isNaN(infoVoucherData?.discount) ? 0 : Math.round((parseFloat(ComputeTotalPrice) * infoVoucherData?.discount / 100), 2)
+			finalPrice = parseInt(ComputeTotalPrice) - parseInt(discounts);
+			let delivery_value = parseInt(infoVoucherData.delivery);
+			finalPrice = finalPrice + (isNaN(delivery_value) ? 0 : delivery_value);
+			return finalPrice
+		}
+		return finalPrice;
+	}, [infoVoucherData]);
+
+	const onSaveVoucher = () => {
+		VoucherUpdate.mutate({
+			voucher_id: selectedid,
+			discount: infoVoucherData.discount,
+			delivery: infoVoucherData.delivery,
+			totalPayment: infoVoucherData.totalPayment
+		})
+
+
+	}
+
+
 
 	return (
 		< div className="w-screen h-screen bg-gray-300 flex flex-col items-center bg-white " >
@@ -366,7 +402,7 @@ const VoucherReport = () => {
 						</thead>
 						<tbody>
 							{FilterVoucherData.map(item => (
-								<tr key={item.id} className={`cursor-pointer hover:bg-blue-400 ${selectedid == item.id ? 'bg-blue-500' : ''}`} onClick={() => { setSelectedid(item.id); onClickRow(item?.order) }}>
+								<tr key={item.id} className={`cursor-pointer hover:bg-blue-400 ${selectedid == item.id ? 'bg-blue-500' : ''}`} onClick={() => { setSelectedid(item.id); onClickRow(item?.order); setInfoVoucherData(item) }}>
 									<td className='p-2 border'>#{item.id}</td>
 									<td className='p-2 border'>{item.customername}</td>
 									<td className='p-2 border'>{new Date(item.date).toLocaleString()}</td>
@@ -378,56 +414,99 @@ const VoucherReport = () => {
 					</table>
 				</div>
 
-				<div className="col-span-1">
-					<div>
-						<div className="flex flex-row gap-1">
-							<h1 className="bold">Order Time - {new Date(voucherData[0]?.order_time).toLocaleString()}</h1>
+				{selectedid && <div class="p-4 bg-white rounded-lg shadow-md w-full max-w-3xl h-full border">
+					<div className='h-full flex flex-col'>
+						<div class="mb-1">
+							<table class="w-full text-left border-collapse">
+								<thead>
+									<tr>
+										<th class="border-b-2 p-2">Items</th>
+										<th class="border-b-2 p-2">Qty</th>
+										<th class="border-b-2 p-2">Total</th>
+										<th class="border-b-2 p-2">Action</th>
+
+									</tr>
+								</thead>
+								<tbody>
+									{Voucher?.orders?.map((item) =>
+										<OrderItem item={item} ispd={item.ispd} />
+									)}
+
+
+									<tr>
+										<td class="border-b p-2 font-bold">Total Price:</td>
+										<td class="border-b p-2"></td>
+										<td class="border-b p-2 font-bold">{numberWithCommas(ComputeTotalPrice)}</td>
+										<td class="border-b p-2"></td>
+
+									</tr>
+								</tbody>
+							</table>
 						</div>
-						<div className="w-full flex flex-col items-center mt-1 border p-1">
+						<div className='w-full flex'>
+							<h1 onClick={() => setIsShowMore(!isShowMore)} class="cursor-pointer text-sm text-blue-500 my-1 ml-auto">
+								{isShowMore ? 'Show Less' : 'Show More'}
+							</h1>
+						</div>
+						{isShowMore && <div class="mb-4 flex flex-row gap-4">
+							<div class="flex flex-col gap-2">
+								<label for="discount" class="font-semibold text-sm">Discount (%)</label>
+								<input type="number" id="discount" class="p-2 border rounded w-32" placeholder="Enter discount amount" value={infoVoucherData?.discount} onChange={e => onChangeInfoVoucher(e)} />
+							</div>
 
+							<div class="flex flex-col gap-2">
+								<label for="delivery" class="font-semibold text-sm">Deli Charges</label>
+								<input type="number" id="delivery" class="p-2 border rounded w-32" placeholder="Enter delivery charges" value={infoVoucherData?.delivery} onChange={onChangeInfoVoucher} />
+							</div>
 
-							<div className="grid grid-cols-4 w-full items-center font-bold">
-								<div className="flex flex-row items-left">
-									<h1 className="text-md font-bold ">
-										Items
-									</h1>
-								</div>
-								<h1 className="text-md text-black font-bold text-center">
-									Qty
-								</h1>
-								<div className='flex flex-row items-center font-bold'>
-
-									<h1 className="text-md ml-auto">Total</h1>
-
-								</div>
-								<div className='ml-auto'>
-									<i class="bi bi-three-dots-vertical"></i>
-								</div>
-
+							<div class="flex flex-col gap-2">
+								<label for="payment" class="font-semibold text-sm">Payment</label>
+								<input type="number" id="totalPayment" class="p-2 border rounded w-32" placeholder="Enter payment amount" value={infoVoucherData?.totalPayment} onChange={onChangeInfoVoucher} />
 							</div>
 						</div>
-						{Voucher?.orders?.map((item) =>
-							<OrderItem item={item} ispd={item.ispd} />
-						)}
-						<div>
-							<h1 className="text-right">Total Price : {numberWithCommas(ComputeTotalPrice)}</h1>
-						</div>
-						<hr className="my-3" />
-						{/* print btn */}
-						<div className="flex flex-row gap-1">
-							{/* delete voucher btn here */}
-							<button className="p-2 bg-red-500 text-white hover:bg-red-600 ml-auto" onClick={() => onDeleteVoucher()}>
-								<icon className="bi bi-trash mr-1"></icon>
-								Delete</button>
+						}
 
-							{/* print btn here */}
-							<button className="p-2 bg-blue-500 text-white" onClick={() => window.print()}>
-								<icon className="bi bi-printer mr-1"></icon>
-								Print</button>
+						<div class="flex flex-col gap-4">
+							<div class="flex justify-between items-center">
+								<span class="font-semibold">Subtotal:</span>
+								<span>{numberWithCommas(ComputeTotalPrice)}</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span class="font-semibold">Discount(%):</span>
+								<span>{numberWithCommas(infoVoucherData?.discount)}</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span class="font-semibold">Delivery Charges:</span>
+								<span>{numberWithCommas(infoVoucherData?.delivery)}</span>
+							</div>
+							<div class="flex justify-between items-center font-bold">
+								<span>Total Price:</span>
+								<span>{numberWithCommas(computeFinalPrice)}</span>
+							</div>
 						</div>
+
+						<div class="mt-auto flex gap-1">
+							<button class="px-2 py-4 font-bold bg-green-500 text-white rounded w-full" onClick={() => {
+								onSaveVoucher();
+							}}>
+								<icon className="bi bi-save mr-1"></icon>
+								Save</button>
+							<button class="px-2 py-4 font-bold bg-gray-500 text-white rounded w-full" onClick={() => {
+								setInfoVoucherData(null);
+								setSelectedid(null)
+								setVoucher([]);
+							}}>
+								<icon className="bi bi-x mr-1"></icon>
+								Cancel</button>
+							<button class="px-2 py-4 font-bold bg-red-500 text-white rounded w-full" onClick={() => {
+								onDeleteVoucher();
+							}}><icon className="bi bi-trash mr-1"></icon> Delete</button>
+							<button class="px-2 py-4 font-bold bg-blue-500 text-white rounded w-full"> <icon className="bi bi-printer mr-1"></icon> Print</button>
+						</div>
+
 					</div>
 
-				</div>
+				</div>}
 			</div>
 
 

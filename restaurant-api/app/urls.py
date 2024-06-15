@@ -22,6 +22,7 @@ urlpatterns = [
      path('api/orderscomplete/', apiview.OrderCompleteAPIView.as_view()),
      path('api/itemdiscount/',apiview.ItemDiscountAPIView.as_view()),
      path('api/deliveryOrder/',apiview.DeliveryOrderAPIView.as_view()),
+     path('api/wasteproduct/',apiview.WasteProductView.as_view()),
 
     path('api/categorys/', apiview.Category.as_view(), name='category'),
     path('api/products/', apiview.Product.as_view(), name='product'), 

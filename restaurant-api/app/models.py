@@ -274,7 +274,6 @@ class OtherIncome(models.Model):
     price = models.CharField(max_length=20, null=True, blank=False)
     date = models.DateField(null=True)
     description = models.TextField(blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title + ' ' + self.description
@@ -285,7 +284,6 @@ class Expense(models.Model):
     price = models.CharField(max_length=20, null=False, blank=False)
     date = models.DateField(null=True)
     description = models.TextField(blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title + ' ' + self.description
@@ -301,6 +299,15 @@ class Purchase(models.Model):
     def __str__(self):
         return self.title + ' ' + self.description
 
+
+class Notification(models.Model):
+    title = models.CharField(max_length=255, null=False, blank=False)
+    message = models.TextField(blank=True, null=False)
+    keyword = models.CharField(max_length=255, null=True, blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title + ' ' + self.message
 
 class FeedBack(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

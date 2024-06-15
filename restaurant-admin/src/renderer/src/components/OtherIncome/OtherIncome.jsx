@@ -223,7 +223,6 @@ const OtherIncome = () => {
 
     return (
         <div className='flex flex-row h-screen'>
-            <Navigation />
             <Loading show={loading} />
             <div className="bg-white font-sans h-full w-full p-3 overflow-auto">
                 <div className="flex flex-row items-center bg-white ">

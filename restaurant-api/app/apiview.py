@@ -1344,7 +1344,10 @@ class OrderCompleteAPIView(APIView):
         remove_item_qty =  request.data.get('remove_item_qty',0)
         waste_item_qty = request.data.get('waste_item_qty',0)
         remove_item_type = request.data.get('remove_item_type',"product")
-
+        
+        discount = request.data.get('discount',0)
+        deliveryCharges =  request.data.get('delivery',0)
+        totalPayment = request.data.get('totalPayment',0)
 
         Voucher =  models.SaveVoucherHistory.objects.get(id=voucher_id)
 
@@ -1352,24 +1355,34 @@ class OrderCompleteAPIView(APIView):
         
         remainqty = remove_item_qty
         remainwasteqty = waste_item_qty
+        
+        if  not remove_item_ids == None:
+            for remove_item_id in remove_item_ids:
+        
+                for realOrder in realOrders:
+                    orderDetail = realOrder.orders
 
-        for remove_item_id in remove_item_ids:
-      
-            for realOrder in realOrders:
-                orderDetail = realOrder.orders
+                    if remove_item_type == 'product':
+                        product_orders = orderDetail.product_orders.filter(id=remove_item_id)
+                        if product_orders.exists():
+                            remainqty = MinusOrderRemoveItem(product_orders.first(), remainqty)
+                            remainwasteqty = MinusOrderWasteItem(product_orders.first(), waste_item_qty, True)
+                    else:
+                        food_orders = orderDetail.food_orders.filter(id=remove_item_id)
+                        if food_orders.exists():
+                            remainqty = MinusOrderRemoveItem(food_orders.first(), remainqty)
+                            remainwasteqty = MinusOrderWasteItem(food_orders.first(), waste_item_qty, False)
 
-                if remove_item_type == 'product':
-                    product_orders = orderDetail.product_orders.filter(id=remove_item_id)
-                    if product_orders.exists():
-                        remainqty = MinusOrderRemoveItem(product_orders.first(), remainqty)
-                        remainwasteqty = MinusOrderWasteItem(product_orders.first(), waste_item_qty, True)
-                else:
-                    food_orders = orderDetail.food_orders.filter(id=remove_item_id)
-                    if food_orders.exists():
-                        remainqty = MinusOrderRemoveItem(food_orders.first(), remainqty)
-                        remainwasteqty = MinusOrderWasteItem(food_orders.first(), waste_item_qty, False)
+        if not discount == 0:
+            Voucher.discount = discount
+        
+        if not deliveryCharges == 0:
+            Voucher.delivery = deliveryCharges
+        
+        if not totalPayment == 0:
+            Voucher.totalPayment = totalPayment
 
-
+        Voucher.save()
 
         orderPayment = int(float(Voucher.totalPayment)) / len(realOrders)
 
@@ -1493,7 +1506,6 @@ def ChartGenerator(self, data, time):
         print(data_d, 'Data D')
         d = datetime.strptime(str(data_d), '%Y-%m-%dT%H:%M:%S.%f%z')
 
-        print(d)
         name = d.strftime('%x')
         if time == 'today':
             name = d.strftime('%I:%M %p')
@@ -1504,7 +1516,7 @@ def ChartGenerator(self, data, time):
         else:
             name = d.strftime('%x')
         # print(name)
-        result[name] = result.get(name, 0) + int(float(item['grandtotal']))
+        result[name] = result.get(name, 0) + int(float(item['totalPayment']))
 
     return result
 
@@ -1551,15 +1563,15 @@ class Sales(APIView):
         chartdata = {}
 
         if time == 'today':
-            data = models.Sales.objects.filter( date__year=str(
+            data = models.SaveVoucherHistory.objects.filter( date__year=str(
                 d.year), date__month=str(d.month), date__day=str(d.day))
 
         elif time == 'month':
-            data = models.Sales.objects.filter(
+            data = models.SaveVoucherHistory.objects.filter(
                  date__year=str(d.year), date__month=str(d.month))
 
         elif time == 'year':
-            data = models.Sales.objects.filter(
+            data = models.SaveVoucherHistory.objects.filter(
                  date__year=str(d.year))
 
         elif time == 'custom':
@@ -1568,15 +1580,13 @@ class Sales(APIView):
             sd = datetime.strptime(start_date, "%m/%d/%y")
             ed = datetime.strptime(
                 end_date, "%m/%d/%y").replace(hour=11, minute=59, second=59)
-            data = models.Sales.objects.filter( date__range=(sd, ed))
+            data = models.SaveVoucherHistory.objects.filter( date__range=(sd, ed))
 
         else:
-            data = models.Sales.objects.all()
+            data = models.SaveVoucherHistory.objects.all()
 
-        if type == 'DT':
-            s = serializers.DTSalesSerializer(data, many=True)
-        else:
-            s = serializers.SalesSerializer(data, many=True)
+     
+        s = serializers.SaveVoucherHistorySerializer(data, many=True)
 
         chartdata = ChartGenerator(self, s.data, time)
 
@@ -2048,20 +2058,19 @@ class TopProductsView(APIView):
 
     def get(self, request):
         time = request.GET.get('time')
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         d = datetime.now()
 
         if time == 'today':
-            data = models.SoldProduct.objects.filter(user=user, date__year=str(
+            data = models.OrderDetail.objects.filter( date__year=str(
                 d.year), date__month=str(d.month), date__day=str(d.day))
 
         elif time == 'month':
-            data = models.SoldProduct.filter(
-                user=user, date__year=str(d.year), date__month=str(d.month))
+            data = models.OrderDetail.objects.filter(
+                 date__year=str(d.year), date__month=str(d.month))
 
         elif time == 'year':
-            data = models.SoldProduct.objects.filter(
-                user=user, date__year=str(d.year))
+            data = models.OrderDetail.objects.filter(
+                 date__year=str(d.year))
 
         elif time == 'custom':
             start_date = request.GET.get('startd')
@@ -2069,20 +2078,21 @@ class TopProductsView(APIView):
             sd = datetime.strptime(start_date, "%m/%d/%y")
             ed = datetime.strptime(
                 end_date, "%m/%d/%y").replace(hour=11, minute=59, second=59)
-            data = models.SoldProduct.objects.filter(
-                user=user, date__range=(sd, ed))
+            data = models.OrderDetail.objects.filter(
+                 date__range=(sd, ed))
 
         else:
-            data = models.SoldProduct.objects.filter(user=user)
+            data = models.OrderDetail.objects.all()
 
         topmoneyproduct = {}
         topfreqsellproduct = {}
 
-        for item in data:
-            topmoneyproduct[item.name] = topmoneyproduct.get(
-                item.name, 0) + int(float(item.price)) * int(float(item.qty))
-            topfreqsellproduct[item.name] = topfreqsellproduct.get(
-                item.name, 0) + 1
+        for orderDetail in data:          
+            for item in orderDetail.food_orders.all():
+                topmoneyproduct[item.food.name] = topmoneyproduct.get(
+                    item.food.name, 0) + int(float(item.total_price)) * int(float(item.qty))
+                topfreqsellproduct[item.food.name] = topfreqsellproduct.get(
+                    item.food.name, 0) + 1
 
         CombineData = {
             'T_Money': topmoneyproduct,
@@ -2162,18 +2172,17 @@ class Expense(APIView):
     def get(self, request):
         time = request.GET.get('time')
         d = datetime.now()
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         if time == 'today':
-            data = models.Expense.objects.filter(user=user, date__year=str(
+            data = models.Expense.objects.filter( date__year=str(
                 d.year), date__month=str(d.month), date__day=str(d.day))
             chartdata = ChartDataGenerator(self, data, time)
         elif time == 'month':
             data = models.Expense.objects.filter(
-                user=user, date__year=str(d.year), date__month=str(d.month))
+                 date__year=str(d.year), date__month=str(d.month))
             chartdata = ChartDataGenerator(self, data, time)
         elif time == 'year':
             data = models.Expense.objects.filter(
-                user=user, date__year=str(d.year))
+                 date__year=str(d.year))
             chartdata = ChartDataGenerator(self, data, time)
         elif time == 'custom':
             start_date = request.GET.get('startd')
@@ -2182,10 +2191,10 @@ class Expense(APIView):
             ed = datetime.strptime(
                 end_date, "%m/%d/%y").replace(hour=11, minute=59, second=59)
             data = models.Expense.objects.filter(
-                user=user, date__range=(sd, ed))
+                date__range=(sd, ed))
             chartdata = ChartDataGenerator(self, data, time)
         else:
-            data = models.Expense.objects.filter(user=user)
+            data = models.Expense.objects.all()
             chartdata = ChartDataGenerator(self, data, time)
 
         s = serializers.ExpenseSerializer(data, many=True)
@@ -2198,26 +2207,24 @@ class Expense(APIView):
         return Response(CombineData)
 
     def post(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         title = request.data['title']
         price = request.data['price']
         date = request.data['date']
         description = request.data['description']
 
         ex = models.Expense.objects.create(
-            date=date, user=user, description=description, title=title, price=price)
+            date=date,  description=description, title=title, price=price)
 
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         id = request.data['id']
         title = request.data['title']
         price = request.data['price']
         date = request.data['date']
         description = request.data['description']
 
-        ex = models.Expense.objects.get(user=user, id=id)
+        ex = models.Expense.objects.get( id=id)
         ex.title = title
         ex.price = price
         ex.description = description
@@ -2226,9 +2233,8 @@ class Expense(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         id = request.GET.get('id')
-        ex = models.Expense.objects.get(user=user, id=id)
+        ex = models.Expense.objects.get( id=id)
         ex.delete()
         return Response(status=status.HTTP_201_CREATED)
 
@@ -2240,7 +2246,7 @@ class Purchase(APIView):
         user = get_user_model().objects.get(username=request.user, is_plan=True)
         data = models.Purchase.objects.filter(user=user)
         if time == 'today':
-            data = models.Purchase.objects.filter(user=user, date__year=str(
+            data = models.Purchase.objects.filter( date__year=str(
                 d.year), date__month=str(d.month), date__day=str(d.day))
             chartdata = ChartDataGenerator(self, data, time)
         elif time == 'month':
@@ -2310,23 +2316,22 @@ class Purchase(APIView):
 
 class OtherIncome(APIView):
     def get(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         time = request.GET.get('time')
 
         d = datetime.now()
 
         if time == 'today':
-            data = models.OtherIncome.objects.filter(user=user, date__year=str(
+            data = models.OtherIncome.objects.filter(date__year=str(
                 d.year), date__month=str(d.month), date__day=str(d.day))
             chartdata = ChartDataGenerator(self, data, time)
             print(data)
         elif time == 'month':
             data = models.OtherIncome.objects.filter(
-                user=user, date__year=str(d.year), date__month=str(d.month))
+                date__year=str(d.year), date__month=str(d.month))
             chartdata = ChartDataGenerator(self, data, time)
         elif time == 'year':
             data = models.OtherIncome.objects.filter(
-                user=user, date__year=str(d.year))
+                date__year=str(d.year))
             chartdata = ChartDataGenerator(self, data, time)
         elif time == 'custom':
             start_date = request.GET.get('startd')
@@ -2335,10 +2340,10 @@ class OtherIncome(APIView):
             ed = datetime.strptime(
                 end_date, "%m/%d/%y").replace(hour=11, minute=59, second=59)
             data = models.OtherIncome.objects.filter(
-                user=user, date__range=(sd, ed))
+                date__range=(sd, ed))
             chartdata = ChartDataGenerator(self, data, time)
         else:
-            data = models.OtherIncome.objects.filter(user=user)
+            data = models.OtherIncome.objects.all()
             chartdata = ChartDataGenerator(self, data, time)
 
         s = serializers.OtherIncomeSerializer(data, many=True)
@@ -2351,26 +2356,24 @@ class OtherIncome(APIView):
         return Response(CombineData)
 
     def post(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         title = request.data['title']
         price = request.data['price']
         date = request.data['date']
         description = request.data['description']
 
         ex = models.OtherIncome.objects.create(
-            date=date, user=user, description=description, title=title, price=price)
+            date=date, description=description, title=title, price=price)
 
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         id = request.data['id']
         title = request.data['title']
         price = request.data['price']
         date = request.data['date']
         description = request.data['description']
 
-        ex = models.OtherIncome.objects.get(user=user, id=id)
+        ex = models.OtherIncome.objects.get(id=id)
         ex.title = title
         ex.price = price
         ex.description = description
@@ -2379,32 +2382,102 @@ class OtherIncome(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
         id = request.GET.get('id')
-        ex = models.OtherIncome.objects.get(user=user, id=id)
+        ex = models.OtherIncome.objects.get(id=id)
         ex.delete()
         return Response(status=status.HTTP_201_CREATED)
+
+def OrderyearGenerator(self, data, strftime='%b'):
+
+    if strftime == '%b':
+        months = [month_abbr[i] for i in range(1, 13)]
+    else:
+        months = [month_name[i] for i in range(1, 13)]
+
+    result = {month: 0 for month in months}
+
+    for SVH in data:
+        date = SVH.date
+        for realorder in SVH.order.all():
+            profit = realorder.realProfit
+            month_name_str = date.strftime(strftime)
+            result[month_name_str] = result.get(
+                month_name_str, 0) + int(float(profit))
+    print(result)
+    return result
+
+class WasteProductView(APIView):
+
+    def get(self, request):
+        d = datetime.now()
+
+        time = request.GET.get('time')
+
+        if time == 'today':
+            data = models.WasteProduct.objects.filter(
+                date__year=str(d.year), date__month=str(d.month), date__day=str(d.day))
+        elif time == 'week':
+            data = models.WasteProduct.objects.filter(
+                date__year=str(d.year), date__week=str(d.isocalendar()[1]))
+        elif time == 'month':
+            data = models.WasteProduct.objects.filter(
+                date__year=str(d.year), date__month=str(d.month))
+        elif time == 'year':
+            data = models.WasteProduct.objects.filter(
+                date__year=str(d.year))
+        elif time == 'custom':
+            start_date = request.GET.get('startd')
+            end_date = request.GET.get('endd')
+            sd = datetime.strptime(start_date, "%m/%d/%y")
+            ed = datetime.strptime(
+                end_date, "%m/%d/%y").replace(hour=11, minute=59, second=59)
+            data = models.WasteProduct.objects.filter(
+                date__range=(sd, ed))
+
+        s = serializers.WasteProductSerializer(data, many=True)
+        
+        return Response(s.data)
+
+    def post(self, request):
+        product_id = request.data.get('pdid',None)
+        unit = request.data.get('unit',0)
+        cost = request.data.get('cost',0)
+        description = request.data.get('description','')
+
+        pd = models.Product.objects.get(id=product_id)
+
+        wp = models.WasteProduct.objects.create(product=pd, unit=unit, cost=cost, description=description)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete(self, request):
+        id = request.GET.get('id')
+        wp = models.WasteProduct.objects.get(id=id)
+        wp.delete()
+        return Response(status=status.HTTP_201_CREATED)
+            
 
 
 class ProfitAndLoss(APIView):
     def get(self, request, format=None):
-        user = get_user_model().objects.get(username=request.user, is_plan=True)
 
         d = datetime.now()
 
         otherincome_data = models.OtherIncome.objects.filter(
-            user=user, date__year=str(d.year))
-        sales_data = models.Sales.objects.filter(
-            user=user, date__year=str(d.year))
+           date__year=str(d.year))
+        sales_data = models.SaveVoucherHistory.objects.filter(
+           date__year=str(d.year))
         expense_data = models.Expense.objects.filter(
-            user=user, date__year=str(d.year))
+           date__year=str(d.year))
         purchase_data = models.Purchase.objects.filter(
-            user=user, date__year=str(d.year))
+           date__year=str(d.year))
 
-        sales_ge = yearGenerator(self, sales_data, '%B')
+        sales_ge = OrderyearGenerator(self, sales_data, '%B')
         otherincome_ge = AyearGenerator(self, otherincome_data, '%B')
         expense_ge = AyearGenerator(self, expense_data, '%B')
         purchase_ge = AyearGenerator(self, purchase_data, '%B')
+
+
 
         addData = {k: sales_ge.get(k, 0) + otherincome_ge.get(k, 0)
                    for k in set(sales_ge) | set(otherincome_ge)}

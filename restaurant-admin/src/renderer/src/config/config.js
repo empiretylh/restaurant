@@ -3,7 +3,7 @@ export const isImageServer = true;
 
 // export const domainURL = isImageServer ? 'https://mttonlinepos.pythonanywhere.com' :'https://empirepos.pythonanywhere.com'
 export const domainURL = 'http://localhost:8000';
-
+export const WEBSOCKET = 'ws://localhost:8000';
 
 export const APPNAME = "Perfect Solution";
 

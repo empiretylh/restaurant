@@ -10,7 +10,6 @@ import Expense from "../components/Expense/Expense";
 import OtherIncome from "../components/OtherIncome/OtherIncome";
 import Customer from "../components/Customer/Customer";
 import Supplier from "../components/Supplier/Supplier";
-import Report from "../components/report/Report";
 import SalesReport from "../components/SalesReport/SalesReport";
 import Setting from "../components/setting/setting";
 import Register from "../components/auth/Register";
@@ -22,6 +21,8 @@ import Table from "../components/Table/Table";
 import Notification from "../components/Notification/Notification";
 import Account from "../components/Account/Account";
 import VoucherReport from "../components/VoucherReport/VoucherReport";
+import ReportView from "../components/Report/ReportView";
+import WasteProduct from "../components/WasteProduct/WasteProduct";
 
 const Routes = () => {
   const { token } = useAuth();
@@ -84,11 +85,11 @@ const Routes = () => {
       element: <Supplier />
     }, {
       path: '/report',
-      element: <Report />
+      element: <ReportView />
     },
     {
-      path: '/salesreport',
-      element: <SalesReport />
+      path: '/garbage',
+      element: <WasteProduct />
     }, {
       path: '/settings',
       element: <Setting />

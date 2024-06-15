@@ -20,10 +20,16 @@ import Waiter from './Waiter';
 import DeliverOrder from './DeliverOrder';
 import CashierDeliveryTable from './CashierDeliveryTable';
 import HistoryTable from './HistoryTable';
+import Expense from '../Expense/Expense';
+import OtherIncome from '../OtherIncome/OtherIncome';
+import { newSocketAdmin } from '../../websocket';
+import { useAlertShow } from '../custom_components/AlertProvider';
 
 const Cashier = () => {
 
 	const [showAdd, setShowAdd] = useState(false);
+
+	const {showNoti , showInfo} = useAlertShow();
 
 
 	const { floor_data, data: floors } = useFloorData();
@@ -34,12 +40,13 @@ const Cashier = () => {
 	const [selectedFloor, setSelectedFloor] = useState(localStorage.getItem('SelectedFloor_Cashier'))
 
 	const [showTable, setShowTable] = useState('Orders');
+	const [showScreen, setShowScreen] = useState('Cashier') // Expense , Other Income
 	const [showSplitView, setShowSplitView] = useState(false);
 
 	const [showWaiter, setShowWaiter] = useState(false);
 	const [showDelivery, setShowDelivery] = useState(false);
 
-	const { Orderdata, isCombine, setIsCombine, loading, setLoading, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher, setSelectedTable, saveAllVoucher, searchText, setSearchText } = useContext(CashOrderContextProvider);
+	const {orders_data, Orderdata, isCombine, setIsCombine, loading, setLoading, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, RemoveVoucher, setSelectedTable, saveAllVoucher, searchText, setSearchText } = useContext(CashOrderContextProvider);
 
 	const WaiterView = () => {
 		return <CustomModal open={showWaiter} setOpen={setShowWaiter} full title="Orders">
@@ -70,6 +77,18 @@ const Cashier = () => {
 			})
 		}
 	}
+	useEffect(()=>{
+		newSocketAdmin.onmessage = (e) => {
+			let data = JSON.parse(e.data);
+			let message = JSON.parse(data?.message)
+			console.log(message)
+			if(message?.type == 'paid'){
+				orders_data.refetch()
+				showInfo('Ready To Paid',message?.text)
+				showNoti(message?.text, 'bi bi-check-circle-fill text-green-500')
+			}
+		}
+	},[])
 
 
 	return (
@@ -82,8 +101,8 @@ const Cashier = () => {
 					<img src={IMAGE.cashier} style={{ width: 40 }} />
 					<h1 className="text-xl font-bold ml-3">Cashier</h1>
 				</div>
-				<div className="flex flex-row items-center ml-3">
-					<div className='flex flex-row items-center gap-2 mr-3'>
+				<div className="flex flex-row items-center ml-3 gap-1">
+					<div className='flex flex-row items-center gap-2'>
 						<icon className="bi bi-layers"></icon>
 						<select value={selectedFloor} className='p-3 px-4 border border-gray-400' onChange={e => {
 							setSelectedFloor(e.target.value)
@@ -100,19 +119,34 @@ const Cashier = () => {
 						<icon className="bi bi-plus-circle"></icon>	Delivery Order
 					</button>
 					{/* delete button */}
-					<button onClick={onDelete} className="p-3 text-black hover:text-white  border-gray-400 border rounded font-mono hover:bg-red-500 ml-3">
+					<button onClick={onDelete} className="p-3 text-black hover:text-white  border-gray-400 border rounded font-mono hover:bg-red-500">
 						<icon className="bi bi-trash"></icon> Delete Order
 					</button>
 
-					<button onClick={() => setIsCombine(prev => !prev)} className={` ${isCombine ? 'bg-blue-800 text-white' : ''} p-3 text-black hover:text-white  border-gray-400 border rounded font-mono hover:bg-blue-500 ml-3`}>
+					<button onClick={() => setIsCombine(prev => !prev)} className={` ${isCombine ? 'bg-blue-800 text-white' : ''} p-3 text-black hover:text-white  border-gray-400 border rounded font-mono hover:bg-blue-500`}>
 						<icon className={`bi ${isCombine ? 'bi-union' : 'bi-exclude'} `}></icon> Merge Order
 					</button>
+
+				</div>
+				<div className="flex flex-row items-center ml-2">
+					<h1 className={`text-md  text-center p-2 border-b cursor-pointer ${showScreen == 'Cashier' && 'border-blue-500 border-b-2'}`} onClick={() => {
+						setShowScreen('Cashier')
+					}}>
+						<i class="bi bi-cart"></i> Cashier</h1>
+					<h1 className={`text-md  text-center p-2 border-b cursor-pointer ${showScreen == 'Expense' && 'border-blue-500 border-b-2'}`} onClick={() => {
+						setShowScreen('Expense')
+					}}>
+						<i class="bi bi-stack"></i> Expense</h1>
+					<h1 className={`text-md  text-center p-2 border-b cursor-pointer ${showScreen == 'Other Income' && 'border-blue-500 border-b-2'}`} onClick={() => {
+						setShowScreen('Other Income')
+					}}>
+						<i class="bi bi-wallet"></i> Other Income</h1>
 
 				</div>
 			</TopBar>
 			<SplitView showSplitView={showSplitView} setShowSplitView={setShowSplitView} />
 
-			<div className="w-full grid grid-cols-6" style={{
+			{showScreen == "Cashier" && <div className="w-full grid grid-cols-6" style={{
 				height: 'calc(100vh - 60px)',
 				overflow: 'auto',
 			}}>
@@ -198,11 +232,15 @@ const Cashier = () => {
 						</div>
 					</div>
 				</div>}
-			</div>
+			</div>}
 
-			<div className="p-1 bg-yellow-200 w-full flex-row flex gap-2">
+			{
+				showScreen == "Expense" && <Expense/>
+			}
+			{
+				showScreen == "Other Income" && <OtherIncome/>
+			}
 
-			</div>
 		</div>
 	)
 }

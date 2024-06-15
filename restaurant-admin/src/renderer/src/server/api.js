@@ -192,6 +192,23 @@ export const deleteVoucherData = (data)=>{
     return axios.delete('/api/orderscomplete/', { data: data })
 }
 
+export const getWasteProducts = ({queryKey}) =>{
+    const [_, time] = queryKey;
+    getTokenLocalStorage();
+    return axios.get('/api/wasteproduct/?time='+time)
+}
+
+export const postWasteProducts = (data)=>{
+    getTokenLocalStorage();
+    return axios.post('/api/wasteproduct/', data)
+}
+
+export const deleteWasteProduct = (data)=>{
+    getTokenLocalStorage();
+    return axios.delete('/api/wasteproduct/?id='+data.id)
+
+}
+
 // ----------------------------------------------------------------------------
 
 

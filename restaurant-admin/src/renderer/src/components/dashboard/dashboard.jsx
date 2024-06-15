@@ -38,9 +38,9 @@ const Dashboard = () => {
                 <CardBtn name='Customer' image={IMAGE.customer} nav={"/customer"} />
                 <CardBtn name='Voucher' image={IMAGE.voucher} nav={"/voucherreport"} />
 
-                <CardBtn name='Report' image={IMAGE.report} nav={"/reports"} />
+                <CardBtn name='Report' image={IMAGE.report} nav={"/report"} />
 
-                <CardBtn name='Profile' image={IMAGE.companyprofile} nav={"/profile"} />
+                <CardBtn name='Garbage' image={IMAGE.garbage} nav={"/garbage"} />
                 <CardBtn name='Logout' image={IMAGE.loading} nav={"/logout"} />
 
             </div>
