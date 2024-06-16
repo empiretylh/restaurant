@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Route, Navigate, useNavigate } from 'react-router-dom';
 import TopBar from '../TopBar/Bar';
 import { IMAGE } from '../../config/image';
+const { ipcRenderer } = window.electron
+
 
 const Dashboard = () => {
 
@@ -11,11 +13,23 @@ const Dashboard = () => {
 
     const CardBtn = ({ name, image, nav }) => {
         return (
-            <div className='w-full h-[250px] bg-white rounded-lg shadow-lg p-3 cursor-pointer flex flex-col items-center justify-center' onClick={() => {
+            <div className='w-full h-[250px] bg-white rounded-lg shadow-lg p-3 cursor-pointer flex flex-col items-center justify-center font-mono' onClick={() => {
                 navigate(nav)
             }}>
                 <img src={image} className="w-[120px]" />
                 <h1 className="text-xl font-semibold mt-5">{name}</h1>
+
+            </div>
+        )
+    }
+
+    const CloseCardBtn = ({ name, image, nav }) => {
+        return (
+            <div className='w-full h-[250px] bg-white rounded-lg shadow-lg p-3 cursor-pointer flex flex-col items-center justify-center' onClick={() => {
+                confirm('Are you sure you want to exit?') &&   ipcRenderer.invoke('exit-app')
+            }}>
+                <img src={IMAGE.exit} className="w-[100px]" />
+                <h1 className="text-xl font-semibold mt-5">Exit</h1>
 
             </div>
         )
@@ -41,8 +55,7 @@ const Dashboard = () => {
                 <CardBtn name='Report' image={IMAGE.report} nav={"/report"} />
 
                 <CardBtn name='Garbage' image={IMAGE.garbage} nav={"/garbage"} />
-                <CardBtn name='Logout' image={IMAGE.loading} nav={"/logout"} />
-
+                <CloseCardBtn/>
             </div>
         </div>
     )

@@ -165,6 +165,11 @@ function createWindow() {
 
 
 
+  // exit app
+  ipcMain.handle('exit-app', async (event, arg) => {
+    app.quit();
+  });
+
 
 
 

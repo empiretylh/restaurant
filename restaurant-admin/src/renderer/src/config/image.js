@@ -19,6 +19,7 @@ import Voucher from '../assets/icon/voucher.png';
 import Report from '../assets/icon/report.png';
 import Garbage from '../assets/icon/garbage.png'
 import Setting from '../assets/icon/settings.png';
+import Exit from '../assets/icon/exit.png';
 export const IMAGE = {
     app_icon: appicon,
     kitchen : kitchen,
@@ -40,6 +41,7 @@ export const IMAGE = {
     voucher:Voucher,
     report:Report,
     garbage:Garbage,
-    setting: Setting
+    setting: Setting,
+    exit: Exit,
 
 }

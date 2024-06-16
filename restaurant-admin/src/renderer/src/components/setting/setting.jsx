@@ -15,6 +15,7 @@ import VoucherProperties from './VoucherProperties'
 import { useUserType } from '../../context/UserTypeProvider'
 import Bar from '../TopBar/Bar'
 import { useCompanyProfile } from '../../context/CompanyProfileContextProvider'
+import DomainProperties from './DomainProperties'
 const { ipcRenderer } = window.electron
 
 const Setting = () => {
@@ -30,6 +31,8 @@ const Setting = () => {
   const { settings, ChangeSettings } = useSetting()
 
   const { company_profile, data: profile } = useCompanyProfile();
+
+  const [showDomain, setShowDomain] = useState(false)
 
   const { t, i18n } = useTranslation()
 
@@ -218,6 +221,23 @@ const Setting = () => {
             </div>
             <div className="flex flex-row justify-between items-center mt-2">
               <div className="flex flex-row items-center">
+                <i className="bi bi-hdd-network text-xl" />
+                <h1 className="text-md ml-4">{t('Domain')}</h1>
+              </div>
+              <div>
+                <button
+                  className="bg-white-500 border hover:bg-slate-100 p-2 rounded-md"
+                  onClick={() => {
+                    setShowDomain(true)
+                  }}
+                >
+                  <i className="bi bi-gear text-black mr-2" />
+                  Properties
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-row justify-between items-center mt-2">
+              <div className="flex flex-row items-center">
                 <i className="bi bi-receipt text-xl" />
                 <h1 className="text-md ml-4">{t('Voucher')}</h1>
               </div>
@@ -233,6 +253,7 @@ const Setting = () => {
                 </button>
               </div>
             </div>
+           
             <div className="flex flex-col mt-2">
               <div className="flex flex-row items-center">
                 <i className="bi bi-grip-horizontal text-xl" />
@@ -278,6 +299,7 @@ const Setting = () => {
       </div>
       <EditProfileModal show={editshow} setShow={setEditShow} data={profile} />
       <VoucherProperties show={showVP} setShow={setShowVP} data={settings} />
+      <DomainProperties show={showDomain} setShow={setShowDomain} data={settings} />
     </div>
   )
 }
