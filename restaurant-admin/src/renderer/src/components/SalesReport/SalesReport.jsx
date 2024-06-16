@@ -21,7 +21,7 @@ import OtherTable from './OtherTable';
 import ProfitnLossTable from './ProfitnLossTable';
 import SalesForm from './SalesForm';
 import { CartContextTempProvider } from './CartContextTempProvier';
-import VoucherView from '../custom_components/VoucherView';
+import PrintVoucherView from '../custom_components/PrintVoucherView';
 
 const SalesReport = () => {
 

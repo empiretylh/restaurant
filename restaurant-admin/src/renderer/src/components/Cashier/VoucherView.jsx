@@ -7,6 +7,7 @@ import { postOrderPaid } from '../../server/api';
 import { useSetting } from '../../context/SettingContextProvider';
 import CustomModal from '../custom_components/CustomModal';
 import { sendToWaiter } from '../../websocket';
+import PrintVoucherView from '../custom_components/PrintVoucherView';
 
 
 const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = false, isDelivery = false, index, selectedVoucher, setSelectedVoucher }) => {
@@ -16,6 +17,9 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 
 	const { settings, ChangeSettings } = useSetting()
 
+	const [newData, setNewData ] = useState(data)
+	const [print, setPrint] = useState(false);
+
 
 	const { orders_data, onChangeCustomerName, onDiscountChange, RemoveVoucher, loading, setLoading } = useContext(CashOrderContextProvider);
 
@@ -24,7 +28,11 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 		if(isDelivery){
 
 			onChangeCustomerName(data["0"]?.orders?.deliveryorder?.customername, data.voucherid);
+	
+	
 		}
+
+		setNewData(data)
 
 	},[isDelivery,data])
 
@@ -232,18 +240,33 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 				</div>
 				<form onSubmit={(e) => {
 					e.preventDefault();
-					SaveVoucher.mutate({
-						order_ids: data.combine_realorderid,
-						table_ids: data.combine_tableid,
-						customername: data.customername || data["0"]?.orders.deliveryorder.customername,
-						totalPrice: data?.splitbill || computeTotalPrice,
-						isDelivery: isDelivery,
+					// SaveVoucher.mutate({
+					// 	order_ids: data.combine_realorderid,
+					// 	table_ids: data.combine_tableid,
+					// 	customername: data.customername || data["0"]?.orders.deliveryorder.customername,
+					// 	totalPrice: data?.splitbill || computeTotalPrice,
+					// 	isDelivery: isDelivery,
+					// 	discount: discount,
+					// 	delivery: delivery,
+					// 	totalPayment: payment,
+					// 	paymentype: paymentType,
+					// 	description: description
+					// });
+
+					// add new data to discount and delivery and description
+
+					setNewData({
+						...newData,
 						discount: discount,
 						delivery: delivery,
 						totalPayment: payment,
-						paymentype: paymentType,
-						description: description
-					});
+						description: description,
+						grandtotal : computeFinalPrice,
+
+					})
+
+					setPrint(true);
+
 					setShowAdvancedSale(false);
 
 				}}>
@@ -392,6 +415,8 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 
 				}
 			}} />
+
+			<PrintVoucherView data={newData} print={print} setPrint={setPrint} totalPrice={ (data?.splitbill || data?.totalPrice) ?  data?.splitbill || data?.totalPrice : computeTotalPrice } />
 		</div>
 	)
 }

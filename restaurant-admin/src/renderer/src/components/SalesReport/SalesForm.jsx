@@ -9,7 +9,7 @@ import { useProductsData } from '../../context/ProductsDataProvider';
 import Loading from '../custom_components/Loading';
 import { useCartTemp } from './CartContextTempProvier';
 import ProductTableModal from './ProductTableModal';
-import VoucherView from '../custom_components/VoucherView';
+import PrintVoucherView from '../custom_components/PrintVoucherView';
 import CustomVoucher from '../custom_components/CustomVoucherView';
 import { useSetting } from '../../context/SettingContextProvider';
 import { useUserType } from '../../context/UserTypeProvider';
@@ -426,7 +426,7 @@ const SalesForm = ({ defaultname = 'Unknown', salesid, sales_data, setSelectedRo
             {settings.enableCustomVoucher && (settings?.paper == 'A4' || settings?.paper == 'A5') ?
                         <CustomVoucher print={print} setPrint={setPrint} data={selectedRow} />
 
-                        :   <VoucherView print={print} setPrint={setPrint} data={selectedRow} />}
+                        :   <PrintVoucherView print={print} setPrint={setPrint} data={selectedRow} />}
             <ProductTableModal show={showpdtable} setShow={setShowpdtable} setSelectProduct={setSelectedProduct} selectedProduct={selectedProduct} />
         </div >
     )

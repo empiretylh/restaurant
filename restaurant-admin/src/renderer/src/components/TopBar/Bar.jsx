@@ -39,12 +39,14 @@ const Bar = ({children}) => {
                   <icon className="bi bi-bell text-2xl" />
                 </button>
                 <button onClick={()=>{
-                  LOGOUT();
+                  // LOGOUT();
                 }} className="bg-gray-200 font-bold p-2 flex items-center justify-center rounded">
                   <icon className="bi bi-person text-2xl" />
                 </button>
                 {/* settings */}
-                <button className="bg-gray-200 font-bold p-2 flex items-center justify-center rounded">
+                <button onClick={()=> {
+                  navigate('/settings') 
+                }} className="bg-gray-200 font-bold p-2 flex items-center justify-center rounded">
                   <icon className="bi bi-gear text-2xl" />
                 </button>
             </div>

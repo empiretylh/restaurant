@@ -25,6 +25,7 @@ import FloorDataProvider from './context/FloorDataProvider'
 import AccountsDataProvider from './context/AccountsContextProvider'
 import CashOrderProvider from './context/CashOrderContextProvider'
 import VoucherContextProvider from './context/VoucherContextProvider'
+import CompanyDataProvider from './context/CompanyProfileContextProvider'
 
 axios.defaults.baseURL = localStorage.getItem('domain') || domainURL
 
@@ -47,25 +48,26 @@ function App() {
                           <AccountsDataProvider>
                             <CashOrderProvider>
                               <VoucherContextProvider>
-                                  <ExpenseDataProvider>
-                                    <OtherIncomeDataProvider>
-                                <CustomerDataProvider>
-                                  {/*         <CartContextProvider> */}
-                                  {/*           <CustomVoucherDataProvider> */}
-                                  <Routes />
-                                  {/*           </CustomVoucherDataProvider> */}
-                                  {/*         </CartContextProvider> */}
-                                </CustomerDataProvider>
-                                    </OtherIncomeDataProvider>
-                                  </ExpenseDataProvider>
+                                <ExpenseDataProvider>
+                                  <OtherIncomeDataProvider>
+                                    <CustomerDataProvider>
+                                      <CompanyDataProvider>
+                                        {/*         <CartContextProvider> */}
+                                        <CustomVoucherDataProvider>
+                                          <Routes />
+                                        </CustomVoucherDataProvider>
+                                      </CompanyDataProvider>
+                                      {/*         </CartContextProvider> */}
+                                    </CustomerDataProvider>
+                                  </OtherIncomeDataProvider>
+                                </ExpenseDataProvider>
                               </VoucherContextProvider>
                             </CashOrderProvider>
                           </AccountsDataProvider>
-
                         </FoodDataProvider>
                       </ProductsDataProvider>
                     </SupplierDataProvider>
-                  </FloorDataProvider >
+                  </FloorDataProvider>
                 </KitchenDataProvider>
                 <FloorsDataProvider />
               </CategoryDataProvider>

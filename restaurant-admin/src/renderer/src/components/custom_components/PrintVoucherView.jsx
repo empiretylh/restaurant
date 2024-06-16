@@ -7,12 +7,15 @@ import { toPng } from 'html-to-image';
 import { useSetting } from '../../context/SettingContextProvider';
 const { ipcRenderer } = window.electron
 import {IMAGE} from '../../config/image'
+import { useCompanyProfile } from '../../context/CompanyProfileContextProvider';
 
-const VoucherView = ({ data, print, setPrint }) => {
+const PrintVoucherView = ({ data, print, setPrint, totalPrice, voucherno = '' }) => {
     const { t } = useTranslation();
     const viewRef = useRef(null);
 
-    const { user_data, profiledata: profile } = useAuth();
+    const { user_data } = useAuth();
+
+    const { company_profile, data: profile } = useCompanyProfile();
 
     const { settings } = useSetting();
 
@@ -33,10 +36,10 @@ const VoucherView = ({ data, print, setPrint }) => {
     const renderItem = (item) => {
         return (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginVertical: 5 }}>
-                <p style={{ fontSize: 18, width: nameWidth, fontWeight: 'bold' }}>{item.name}</p>
+                <p style={{ fontSize: 18, width: nameWidth, fontWeight: 'bold' }}>{item.ispd ? item.product.name : item.food.name}</p>
                 <p style={{ fontSize: 18, width: qtyWidth, textAlign: 'center' }}>{item.qty}</p>
-                <p style={{ fontSize: 18, width: priceWidth, textAlign: 'right' }}>{numberWithCommas(item.price)}</p>
-                <p style={{ fontSize: 18, width: totalWidth, textAlign: 'right' }}>{numberWithCommas(parseInt(item.price) * parseInt(item.qty))}</p>
+                <p style={{ fontSize: 18, width: priceWidth, textAlign: 'right' }}>{numberWithCommas(item.ispd ? item?.prdouct?.price : item?.food?.price)}</p>
+                <p style={{ fontSize: 18, width: totalWidth, textAlign: 'right' }}>{numberWithCommas(parseInt(item.total_price))}</p>
             </div>
         )
     };
@@ -53,13 +56,13 @@ const VoucherView = ({ data, print, setPrint }) => {
                     const aspectRatio = this.width / this.height;
                     const printableWidth = paperWidth;
                     const printableHeight = printableWidth / aspectRatio;
-                    ipcRenderer.invoke('print-image', {
-                        image: dataurl,
-                        options : printOptions,
-                        width_img: printableWidth,
-                        height_img: printableHeight,
-                        paper : paper,
-                    });
+                    // ipcRenderer.invoke('print-image', {
+                    //     image: dataurl,
+                    //     options : printOptions,
+                    //     width_img: printableWidth,
+                    //     height_img: printableHeight,
+                    //     paper : paper,
+                    // });
                 }
                 img.src = dataurl;
 
@@ -74,7 +77,7 @@ const VoucherView = ({ data, print, setPrint }) => {
     useEffect(() => {
         if (print) {
             snapshot();
-            setPrint(false);
+            // setPrint(false);
         }
         console.log('Printing')
 
@@ -104,7 +107,9 @@ const VoucherView = ({ data, print, setPrint }) => {
                 zIndex: 999999
             }}
         >
+
             <div className="bg-white rounded-lg">
+            {JSON.stringify(profile)}
                 <div ref={viewRef} style={{ backgroundColor: 'white', padding: 0, width: '300px', height: 'auto' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} className='mb-2'>
                         <img
@@ -125,17 +130,17 @@ const VoucherView = ({ data, print, setPrint }) => {
                         <p style={{ fontSize: 16, fontWeight: 'bold' }}>
                             {t('Receipt Number')}:{' '}
                         </p>
-                        <p style={{ fontSize: 16 }}>{data?.voucherNumber}</p>
+                        <p style={{ fontSize: 16 }}>{voucherno}</p>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <p style={{ fontSize: 16, fontWeight: 'bold' }}>
                             {t('Customer Name')}:{' '}
                         </p>
-                        <p style={{ fontSize: 16 }}>{data?.customerName}</p>
+                        <p style={{ fontSize: 16 }}>{data?.customername}</p>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }} className='mb-2'>
                         <p style={{ fontSize: 16, fontWeight: 'bold' }}>{t('Date')}:{' '}</p>
-                        <p style={{ fontSize: 16 }}>{new Date(data?.date).toLocaleDateString()}</p>
+                        <p style={{ fontSize: 16 }}>{new Date().toLocaleDateString()}</p>
                     </div>
                     <div className="border w-full h-[3px] bg-black" />
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginVertical: 5 }}>
@@ -145,25 +150,25 @@ const VoucherView = ({ data, print, setPrint }) => {
                         <p style={{ fontSize: 16, fontWeight: 'bold', width: totalWidth, textAlign: 'right' }}>Total</p>
                     </div>
                    
-                    {data?.sproduct?.map(item => renderItem(item))}
+                    {data?.orders?.map(item => renderItem(item))}
                     <div className="border w-full h-[3px] bg-black mt-2" />
                     <div className='my-2' style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <p style={{ fontSize: 16, fontWeight: 'bold' }}>{t('Total Amount')}:{' '}</p>
-                        <p style={{ fontSize: 16 }}>{numberWithCommas(data?.totalAmount)} Ks</p>
+                        <p style={{ fontSize: 16 }}>{numberWithCommas(totalPrice)} Ks</p>
                     </div> 
-                    {data?.tax === '0' ? null : (
+                    {/* {data?.tax === '0' ? null : (
                         <div className="my-2" style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <p style={{ fontSize: 16, fontWeight: 'bold' }}>{t('Tax')}:{' '}</p>
                             <p style={{ fontSize: 16 }}>{numberWithCommas(data?.tax)} %</p>
                         </div>
-                    )}
-                    {data?.deliveryCharges === null || data?.deliveryCharges === '0' ? null : (
+                    )} */}
+                    {data?.delivery == null || data?.delivery == '0' ? null : (
                         <div className="my-2" style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <p style={{ fontSize: 16, fontWeight: 'bold' }}>{t('Delivery Charges')}:{' '}</p>
-                            <p style={{ fontSize: 16 }}>{numberWithCommas(data?.deliveryCharges)} Ks</p>
+                            <p style={{ fontSize: 16 }}>{numberWithCommas(data?.delivery)} Ks</p>
                         </div>
                     )}
-                    {data?.discount === '0' ? null : (
+                    {data?.discount == '0' || data?.discount == undefined ? null : (
                         <>
                             <div className="border w-full h-[3px] bg-black" />
                             <div className="my-2" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -177,12 +182,12 @@ const VoucherView = ({ data, print, setPrint }) => {
                         <p style={{ fontSize: 16, fontWeight: 'bold' }}>{t('Grand Total')}:{' '}</p>
                         <p style={{ fontSize: 16, fontWeight: 'bold' }}>{numberWithCommas(parseInt(data?.grandtotal))} Ks</p>
                     </div>
-                    {parseInt(data?.customer_payment, 10) === parseInt(data?.grandtotal, 10) ? null : (
+                    {parseInt(data?.totalPayment, 10) == parseInt(data?.grandtotal, 10) ? null : (
                         <>
                             <div className="border w-full h-[3px] bg-black" />
                             <div className="my-2" style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <p style={{ fontSize: 16, fontWeight: 'bold' }}>Payment Amount:{' '}</p>
-                                <p style={{ fontSize: 16, fontWeight: 'bold' }}>{numberWithCommas(parseInt(data?.customer_payment))} Ks</p>
+                                <p style={{ fontSize: 16, fontWeight: 'bold' }}>{numberWithCommas(parseInt(data?.totalPayment))} Ks</p>
                             </div>
                             <div className="border w-full h-[3px] bg-black" />
 
@@ -190,14 +195,14 @@ const VoucherView = ({ data, print, setPrint }) => {
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <p style={{ fontSize: '16px', fontWeight: 'bold' }}>Remaining Amount: </p>
                                 <p style={{ fontSize: '16px', fontWeight: 'bold' }}>
-                                    {numberWithCommas(parseInt(data?.grandtotal, 10) - parseInt(data?.customer_payment, 10))} Ks
+                                    {numberWithCommas(parseInt(data?.grandtotal, 10) - parseInt(data?.totalPayment, 10))} Ks
                                 </p>
                             </div>
                         </>
                     )}
 
 
-                    {data?.description === '' || data?.description === '#cashier' ? null : (
+                    {data?.description == ''|| data?.description == undefined  || data?.description == '#cashier' ? null : (
                         <>
                             <hr />
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -214,7 +219,7 @@ const VoucherView = ({ data, print, setPrint }) => {
     )
 }
 
-export default VoucherView;
+export default PrintVoucherView;
 
 
 // const data = [

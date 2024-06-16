@@ -18,6 +18,7 @@ import Supplier from '../assets/icon/supplier.png';
 import Voucher from '../assets/icon/voucher.png';
 import Report from '../assets/icon/report.png';
 import Garbage from '../assets/icon/garbage.png'
+import Setting from '../assets/icon/settings.png';
 export const IMAGE = {
     app_icon: appicon,
     kitchen : kitchen,
@@ -38,6 +39,7 @@ export const IMAGE = {
     supplier:Supplier,
     voucher:Voucher,
     report:Report,
-    garbage:Garbage
+    garbage:Garbage,
+    setting: Setting
 
 }
