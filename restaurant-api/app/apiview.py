@@ -163,27 +163,29 @@ class CreateCompany(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
     def get(self, request):
-        user = get_user_model().objects.get(username=request.user)
-        data = models.CompanyProfile.objects.get(user=user)
+        data = models.CompanyProfile.objects.last()
         s = serializers.CompanyProfileSerializer(data)
 
         return Response(s.data)
 
     def put(self, request):
-        user = get_user_model().objects.get(username=request.user)
-        data = models.CompanyProfile.objects.get(user=user)
+        data = models.CompanyProfile.objects.last()
 
         name = request.data.get('name', data.name)
         email = request.data.get('email', data.email)
         phoneno = request.data.get('phoneno', data.phoneno)
         address = request.data.get('address', data.address)
-        logo = request.data.get('logo', data.logo)
+        logo = request.data.get('logo', None)
+
+        print(logo, "this line logo is what that")
+
+        if not logo == None:
+            data.logo = logo
 
         data.name = name
         data.email = email
         data.phoneno = phoneno
         data.address = address
-        data.logo = logo
 
         data.save()
 
@@ -1020,10 +1022,10 @@ class SendOrder(APIView):
         if put_type == 'cook':
             realorder.isCooking = True
             for fd in realorder.orders.food_orders.all():
-                if fd.kitchen == kitchen:
-                    if not fd.isCooking:
-                        fd.isCooking = True
-                    fd.save()
+                print(fd.isCooking, "cooking .......")
+                fd.isCooking = True
+                # if fd.kitchen == kitchen:
+                fd.save()
 
             for pd in realorder.orders.product_orders.all():
                 if pd.kitchen == kitchen:
@@ -1317,7 +1319,7 @@ class OrderCompleteAPIView(APIView):
                 table.save()
         
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(SVH.id)
 
     def delete(self, request):
         table_id = request.data.get('table_id', None)

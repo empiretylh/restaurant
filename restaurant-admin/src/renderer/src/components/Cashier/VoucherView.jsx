@@ -17,36 +17,46 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 
 	const { settings, ChangeSettings } = useSetting()
 
-	const [newData, setNewData ] = useState(data)
+	const [newData, setNewData] = useState(data)
 	const [print, setPrint] = useState(false);
+
+	const isPrint = useRef(false)
+	const [voucherno, setVoucherNo] = useState(false);
 
 
 	const { orders_data, onChangeCustomerName, onDiscountChange, RemoveVoucher, loading, setLoading } = useContext(CashOrderContextProvider);
 
 
-	useEffect(()=>{
-		if(isDelivery){
-
+	useEffect(() => {
+		if (isDelivery) {
 			onChangeCustomerName(data["0"]?.orders?.deliveryorder?.customername, data.voucherid);
-	
-	
 		}
 
 		setNewData(data)
 
-	},[isDelivery,data])
+	}, [isDelivery, data])
 
 	const SaveVoucher = useMutation(postOrderPaid, {
 		onMutate: (e) => {
 			setLoading(true)
 		},
 		onSuccess: (e) => {
+
+			if (isPrint.current) {
+				setVoucherNo(e.data);
+				setPrint(true);
+			}
 			RemoveVoucher(data?.voucherid)
-			setLoading(false)
+
 			if (isDelivery) {
 				orders_data.refetch()
 
 			}
+
+			setLoading(false)
+
+
+
 		},
 		onError: (e) => {
 			setLoading(false);
@@ -187,11 +197,11 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 		const discountRef = useRef(null);
 		const [description, setDescription] = useState("")
 
-		useEffect(()=>{
-			if(isDelivery){	
+		useEffect(() => {
+			if (isDelivery) {
 				setDelivery(data["0"]?.orders?.deliveryorder?.deliveryCharges)
 			}
-		},[isDelivery, data])
+		}, [isDelivery, data])
 
 		const { settings, ChangeSettings } = useSetting()
 
@@ -240,18 +250,18 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 				</div>
 				<form onSubmit={(e) => {
 					e.preventDefault();
-					// SaveVoucher.mutate({
-					// 	order_ids: data.combine_realorderid,
-					// 	table_ids: data.combine_tableid,
-					// 	customername: data.customername || data["0"]?.orders.deliveryorder.customername,
-					// 	totalPrice: data?.splitbill || computeTotalPrice,
-					// 	isDelivery: isDelivery,
-					// 	discount: discount,
-					// 	delivery: delivery,
-					// 	totalPayment: payment,
-					// 	paymentype: paymentType,
-					// 	description: description
-					// });
+					SaveVoucher.mutate({
+						order_ids: data.combine_realorderid,
+						table_ids: data.combine_tableid,
+						customername: data.customername || data["0"]?.orders.deliveryorder.customername,
+						totalPrice: data?.splitbill || computeTotalPrice,
+						isDelivery: isDelivery,
+						discount: discount,
+						delivery: delivery,
+						totalPayment: payment,
+						paymentype: paymentType,
+						description: description
+					});
 
 					// add new data to discount and delivery and description
 
@@ -261,11 +271,10 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 						delivery: delivery,
 						totalPayment: payment,
 						description: description,
-						grandtotal : computeFinalPrice,
+						grandtotal: computeFinalPrice,
 
 					})
 
-					setPrint(true);
 
 					setShowAdvancedSale(false);
 
@@ -376,19 +385,28 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 			</div>
 			<div className='w-full p-1 flex flex-row gap-2 items-center'>
 				<button onClick={() => {
-					console.log(settings.advancedSale)
+					isPrint.current = false;
 					if (settings.advancedSale) {
 						setShowAdvancedSale(true)
 					} else {
 						onSaveVoucher();
 					}
-					
+
 					sendToWaiter('reload')
 				}} className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
 					<icon className="bi bi-save" />
 					Save
 				</button>
-				<button className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
+				<button onClick={() => {
+					isPrint.current = true;
+					if (settings.advancedSale) {
+						setShowAdvancedSale(true)
+					} else {
+						onSaveVoucher();
+					}
+
+					sendToWaiter('reload')
+				}} className='p-2 bg-blue-800 hover:bg-blue-500 text-white rounded flex flex-row items-center gap-2' >
 					<icon className="bi bi-printer" />
 					Save & Print
 				</button>
@@ -416,7 +434,7 @@ const VoucherView = ({ data, selectedRows = [], setSelectedRows, isCombine = fal
 				}
 			}} />
 
-			<PrintVoucherView data={newData} print={print} setPrint={setPrint} totalPrice={ (data?.splitbill || data?.totalPrice) ?  data?.splitbill || data?.totalPrice : computeTotalPrice } />
+			<PrintVoucherView data={newData} print={print} setPrint={setPrint} totalPrice={(data?.splitbill || data?.totalPrice) ? data?.splitbill || data?.totalPrice : computeTotalPrice} voucherno={voucherno} />
 		</div>
 	)
 }

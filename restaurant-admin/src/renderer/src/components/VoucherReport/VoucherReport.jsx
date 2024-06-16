@@ -6,6 +6,8 @@ import { useMutation, useQuery } from 'react-query';
 import { createKitchen, deleteVoucherData, getKitchen, getVoucherData, updateVoucherData } from '../../server/api';
 import numberWithCommas from '../custom_components/NumberWithCommas';
 import ItemEditModal from './ItemEditModal';
+import PrintVoucherView from '../custom_components/PrintVoucherView';
+import { useAlertShow } from '../custom_components/AlertProvider';
 
 const VoucherReport = () => {
 
@@ -20,8 +22,9 @@ const VoucherReport = () => {
 		discount: '',
 	});
 
+	const {showNoti } = useAlertShow();
 
-	const [isReverse, setIsReverse] = useState(localStorage.getItem('isreverse') || false);
+	const [isReverse, setIsReverse] = useState(false);
 
 	const voucher_data = useQuery(['voucher', time], getVoucherData);
 	const [showVoucherDetail, setShowVoucherDetail] = useState(false);
@@ -33,6 +36,8 @@ const VoucherReport = () => {
 	const [Voucher, setVoucher] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [isShowMore, setIsShowMore] = useState(false);
+
+	const [print, setPrint] = useState(false);
 
 	const handleFilterChange = (e) => {
 		setFilters({
@@ -228,6 +233,7 @@ const VoucherReport = () => {
 		},
 		onSuccess: (data) => {
 			setLoading(false)
+			showNoti('Voucher updated successfully')
 			setVoucher([]);
 			voucher_data.refetch();
 			setSelectedid(null)
@@ -247,6 +253,7 @@ const VoucherReport = () => {
 			setLoading(false)
 			setVoucher([]);
 			voucher_data.refetch();
+			showNoti('Voucher deleted successfully')
 		},
 		onError: (error) => {
 			setLoading(false)
@@ -308,7 +315,7 @@ const VoucherReport = () => {
 			return finalPrice
 		}
 		return finalPrice;
-	}, [infoVoucherData]);
+	}, [infoVoucherData, ComputeTotalPrice]);
 
 	const onSaveVoucher = () => {
 		VoucherUpdate.mutate({
@@ -501,14 +508,22 @@ const VoucherReport = () => {
 							<button class="px-2 py-4 font-bold bg-red-500 text-white rounded w-full" onClick={() => {
 								onDeleteVoucher();
 							}}><icon className="bi bi-trash mr-1"></icon> Delete</button>
-							<button class="px-2 py-4 font-bold bg-blue-500 text-white rounded w-full"> <icon className="bi bi-printer mr-1"></icon> Print</button>
+							<button class="px-2 py-4 font-bold bg-blue-500 text-white rounded w-full" onClick={()=>{
+								setPrint(true)
+							}}> <icon className="bi bi-printer mr-1"></icon> Print</button>
 						</div>
+
 
 					</div>
 
 				</div>}
 			</div>
-
+							<PrintVoucherView data={{
+								customername : infoVoucherData?.customername,
+								date : infoVoucherData?.date,
+								...infoVoucherData,
+								...Voucher
+							}} print={print} setPrint={setPrint} voucherno={selectedid} totalPrice={ComputeTotalPrice} grandtotal={computeFinalPrice}/>
 
 		</div >
 	)

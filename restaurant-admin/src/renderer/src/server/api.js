@@ -40,6 +40,15 @@ export const getCompanyProfile = (data) => {
 }
 
 
+export const putCompanyProfile = (data) => {
+    getTokenLocalStorage();
+    return axios.put('/api/companyprofile/', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+}
+
 export const getAccounts = (data) => {
     getTokenLocalStorage();
     return axios.get('/api/accounts/', data);
@@ -60,6 +69,7 @@ export const createKitchen = (data) => {
     getTokenLocalStorage();
     return axios.post('/api/kitchen/', data);
 }
+
 
 
 export const getKitchen = (data) => {

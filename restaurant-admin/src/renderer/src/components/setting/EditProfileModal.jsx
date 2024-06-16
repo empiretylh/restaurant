@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAlertShow } from '../custom_components/AlertProvider';
 import { LessThanProduct, getBeforeExpireProduct, useProductsData } from '../../context/ProductsDataProvider';
 import { useMutation, useQuery } from 'react-query';
-import { changePrice, getSales, postCustomer, profileupdate, putCustomer, putProducts, putSupplier } from '../../server/api';
+import { changePrice, getSales, postCustomer, profileupdate, putCompanyProfile, putCustomer, putProducts, putSupplier } from '../../server/api';
 import { useCustomerData } from '../../context/CustomerProvider';
 import numberWithCommas from '../custom_components/NumberWithCommas';
 import { useSupplierData } from '../../context/SupplierProvider';
@@ -18,7 +18,7 @@ const EditProfileModal = ({ show, setShow, data, customerid }) => {
 
     const [oldData, setOldData] = useState(data);
 
-    const putProfile = useMutation(profileupdate,{
+    const putProfile = useMutation(putCompanyProfile,{
         onSuccess: (data)=>{
             showNoti('Profile Updated Successfully');
             user_data.refetch();
@@ -39,7 +39,6 @@ const EditProfileModal = ({ show, setShow, data, customerid }) => {
     },[data, show])
 
 
-    const [searchtext, setSearchtext] = useState('');
 
 
     window.addEventListener('keydown', (e) => {
@@ -57,7 +56,10 @@ const EditProfileModal = ({ show, setShow, data, customerid }) => {
 
     const onSubmit = (e)=>{
         e.preventDefault();
-        putProfile.mutate(oldData);
+        putProfile.mutate({
+            ...oldData,
+            logo : null,
+        });
         setShow(false)
     }
 

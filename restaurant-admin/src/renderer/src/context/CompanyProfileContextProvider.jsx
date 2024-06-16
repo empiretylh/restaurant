@@ -19,7 +19,6 @@ const CompanyDataProvider = ({ children }) => {
     const data = useMemo(() => {
 
         if (company_profile.data) {
-            console.log(company_profile.data.data , "hellolllllllllllllllllllllllllll")
             return company_profile.data.data;
         }
 

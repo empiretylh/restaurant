@@ -6,7 +6,7 @@ import { APPNAME } from '../../config/config'
 import { IMAGE } from '../../config/image'
 import { useAuth } from '../../context/AuthContextProvider'
 import { useSetting } from '../../context/SettingContextProvider'
-import { profileimageupload } from '../../server/api'
+import { profileimageupload, putCompanyProfile } from '../../server/api'
 import { useAlertShow } from '../custom_components/AlertProvider'
 import Loading from '../custom_components/Loading'
 import Navigation from '../custom_components/Navigation'
@@ -14,25 +14,28 @@ import EditProfileModal from './EditProfileModal'
 import VoucherProperties from './VoucherProperties'
 import { useUserType } from '../../context/UserTypeProvider'
 import Bar from '../TopBar/Bar'
+import { useCompanyProfile } from '../../context/CompanyProfileContextProvider'
 const { ipcRenderer } = window.electron
 
 const Setting = () => {
   const [loading, setLoading] = useState(false)
 
-  const {isAdmin} = useUserType();
+  const { isAdmin } = useUserType();
 
-  const { user_data, profiledata, LOGOUT } = useAuth()
+  const { user_data, LOGOUT } = useAuth()
 
   const { showNoti, showConfirm } = useAlertShow()
 
   const [editshow, setEditShow] = useState(false)
   const { settings, ChangeSettings } = useSetting()
 
+  const { company_profile, data: profile } = useCompanyProfile();
+
   const { t, i18n } = useTranslation()
 
   const filechoseref = useRef()
 
-  const ImageUpload = useMutation(profileimageupload, {
+  const ImageUpload = useMutation(putCompanyProfile, {
     onSuccess: (data) => {
       user_data.refetch()
       setLoading(false)
@@ -44,16 +47,18 @@ const Setting = () => {
     }
   })
 
+
+
   const saveProfileImage = async (dataUrl) => {
     const result = await ipcRenderer.invoke('save-profile-img', { imageurl: dataUrl })
     console.log(result)
   }
 
   useEffect(() => {
-    if (profiledata?.profileimage) {
-      saveProfileImage(axios.defaults.baseURL + profiledata?.profileimage)
+    if (profile?.logo) {
+      saveProfileImage(axios.defaults.baseURL + profile?.logo)
     }
-  }, [profiledata?.profileimage])
+  }, [profile?.logo])
 
   const [showVP, setShowVP] = useState(false)
 
@@ -75,16 +80,82 @@ const Setting = () => {
 
   return (
     <div className="flex flex-col h-screen">
-    <Bar>
-    <div className="flex flex-row items-center">
-					<img src={IMAGE.setting} style={{ width: 40 }} />
-					<h1 className="text-xl font-bold ml-3">Settings</h1>
-				</div>
-    </Bar>
+      <Bar>
+        <div className="flex flex-row items-center">
+          <img src={IMAGE.setting} style={{ width: 40 }} />
+          <h1 className="text-xl font-bold ml-3">Settings</h1>
+        </div>
+      </Bar>
       <Loading show={loading} />
       <div className="bg-white font-sans h-full w-full px-3 overflow-auto">
         <div className="flex justify-center flex-col items-center w-full">
-         
+
+          <div className="flex flex-row items-center mt-10">
+            <i className="bi bi-building text-xl" />
+            <h1 className="text-xl font-bold ml-4 ">Company Profile</h1>
+          </div>
+          <div className="card rounded-lg border mt-3 shadow-lg p-3 w-1/2">
+
+            <div className="flex flex-row items-center">
+              <div className="relative">
+                <img
+                  src={
+                    profile?.logo
+                      ? axios.defaults.baseURL + profile?.logo
+                      : IMAGE.app_icon
+                  }
+                  className="w-[100px] h-[100px] rounded-full bg-black"
+                  onError={(e) => {
+                    e.target.onerror = null
+                    e.target.src = IMAGE.app_icon
+                  }}
+                />
+                <button
+                  className="bg-slate-200 hover:bg-slate-300 p-2 rounded-full absolute"
+                  style={{
+                    bottom: -10,
+                    right: -10
+                  }}
+                  onClick={() => {
+                    filechoseref.current.click()
+                  }}
+                >
+                  <i className="bi bi-camera text-black" />
+                </button>
+                <input
+                  type="file"
+                  className="hidden"
+                  ref={filechoseref}
+                  onChange={(e) => {
+                    setLoading(true)
+                    if (e.target.files[0]) {
+                      ImageUpload.mutate({
+                        logo: e.target.files[0]
+                      })
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex flex-col ml-5">
+                <h1 className="text-xl font-bold">{profile?.name}</h1>
+                <h1 className="text-md text-gray-800">{profile?.username}</h1>
+                <h1 className="text-md text-gray-800">{profile?.email}</h1>
+                <h1 className="text-md text-gray-800">{profile?.phoneno}</h1>
+                <h1 className="text-md text-gray-800">{profile?.address}</h1>
+              </div>
+                
+              <div className="ml-auto">
+                <button
+                  className="bg-primary hover:bg-blue-900 p-2 rounded-md"
+                  onClick={() => setEditShow(true)}
+                >
+                  <i className="bi bi-pencil text-white" />
+                </button>
+              </div>
+            </div>
+
+          </div>
           <div className="flex flex-row items-center mt-10">
             <i className="bi bi-gear text-xl" />
             <h1 className="text-xl font-bold ml-4 ">Settings</h1>
@@ -112,7 +183,7 @@ const Setting = () => {
                 </select>
               </div>
             </div>
-          
+
 
             <div className="flex flex-row justify-between items-center mt-2">
               <div className="flex flex-row items-center">
@@ -205,7 +276,7 @@ const Setting = () => {
           </div>
         </div>
       </div>
-      <EditProfileModal show={editshow} setShow={setEditShow} data={profiledata} />
+      <EditProfileModal show={editshow} setShow={setEditShow} data={profile} />
       <VoucherProperties show={showVP} setShow={setShowVP} data={settings} />
     </div>
   )
