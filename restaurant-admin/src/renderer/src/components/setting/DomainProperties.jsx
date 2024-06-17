@@ -47,7 +47,7 @@ const DomainProperties = ({ show, setShow, data, customerid }) => {
           <div className="flex justify-between items-center p-2">
             <div className="flex flex-row items-center">
               <i className="bi bi-hdd-network text-2xl mr-2"></i>
-              <h1 className="text-xl font-bold">Domain</h1>
+              <h1 className="text-xl font-bold">Server</h1>
             </div>
             <button className="text-red-500 p-3" onClick={() => setShow(false)}>
               X
@@ -63,6 +63,7 @@ const DomainProperties = ({ show, setShow, data, customerid }) => {
               onChange={(e) => {
                 setServerDomain(e.target.value)
                 localStorage.setItem('domainURL', e.target.value)
+                axios.defaults.baseURL = e.target.value
               }}
             />
 
@@ -77,6 +78,21 @@ const DomainProperties = ({ show, setShow, data, customerid }) => {
               }}
             />
           </div>
+
+          <div className="flex flex-row justify-end p-2">
+            <button
+              className="bg-primary text-white p-2 rounded-md w-full"
+              onClick={() => {
+                setShow(false)
+                window.location.reload()
+
+              
+              }}
+            >
+              
+              Restart App
+            </button>
+            </div>
         </div>
       </div>
     </>

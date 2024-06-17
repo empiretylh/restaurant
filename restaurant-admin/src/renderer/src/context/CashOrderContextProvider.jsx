@@ -203,6 +203,7 @@ const CashOrderProvider = ({ children }) => {
 
 
     const saveAllVoucher = ()=>{
+        confirm('Are you sure you want to save all voucher?')
         Voucher?.map((data)=>{
             console.log(data.combine_tableid[0])
         	SaveVoucher.mutate({

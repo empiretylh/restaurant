@@ -19,6 +19,7 @@ const SettingDataProvider = ({ children }) => {
     printSilent: false,
     enableCustomVoucher: false,
     advancedSale: true,
+    autoPayment : true,
   })
 
   //get settings data from localstorage

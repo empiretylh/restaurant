@@ -171,7 +171,7 @@ const Setting = () => {
                 <h1 className="text-xl font-bold ml-4 ">{t('Language')}</h1>
               </div>
               <div>
-                <select
+              <select
                   className="border rounded-md p-2"
                   value={i18n.language}
                   onChange={(e) => {
@@ -184,6 +184,54 @@ const Setting = () => {
                   <option value="en">English</option>
                   <option value="mm">Burmese</option>
                 </select>
+
+
+              </div>
+            </div>
+
+            <div className="flex flex-row justify-between items-center mt-1">
+              <div className="flex flex-row">
+                <i className='bi bi-credit-card-2-front text-xl mr-4' />
+             Auto Complete Payment
+              </div>
+              <div>
+              
+              <input
+                  type="checkbox"
+                  id="autoPayment"
+                  className="border rounded-md p-2 mr-2 text-center"
+                  checked={settings?.autoPayment}
+                  onChange={(e) => {
+                    ChangeSettings(!settings?.autoPayment, 'autoPayment')
+                  }}
+                />
+              
+                <label className="ml-1 mr-2 whitespace-nowrap" htmlFor="autoPayment">
+                  {settings?.autoPayment ? 'Enable' : 'Disable'}
+                </label>
+              </div>
+            </div>
+
+            <div className="flex flex-row justify-between items-center mt-1">
+              <div className="flex flex-row">
+                <i className='bi bi-receipt text-xl mr-4' />
+                  Advanced Sale
+              </div>
+              <div>
+              
+              <input
+                  type="checkbox"
+                  id="advancedSale"
+                  className="border rounded-md p-2 mr-2 text-center"
+                  checked={settings?.advancedSale}
+                  onChange={(e) => {
+                    ChangeSettings(!settings?.advancedSale, 'autoPayment')
+                  }}
+                />
+              
+                <label className="ml-1 mr-2 whitespace-nowrap" htmlFor="advancedSale">
+                  {settings?.advancedSale ? 'Enable' : 'Disable'}
+                </label>
               </div>
             </div>
 

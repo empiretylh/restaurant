@@ -3,6 +3,7 @@ import CustomModal from "../custom_components/CustomModal";
 import { CashOrderContextProvider } from "../../context/CashOrderContextProvider";
 import Collapsible from "react-collapsible";
 import numberWithCommas from "../custom_components/NumberWithCommas";
+import React from "react";
 
 const SplitView = ({ showSplitView, setShowSplitView }) => {
     const { orders_data, Orderdata, isCombine, setIsCombine, selectedRows, setSelectedRows, setTime, time, Voucher, SameOrderDataFilter, newVoucher, SplitVoucher, ComputeTotalAmount, SplitVoucherByAmount, RemoveVoucher, SplitVoucherByGuest } = useContext(CashOrderContextProvider);
@@ -268,4 +269,4 @@ const SplitView = ({ showSplitView, setShowSplitView }) => {
 }
 
 
-export default SplitView;
+export default React.memo(SplitView);

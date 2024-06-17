@@ -1,4 +1,4 @@
-# pos-desktop
+# restaurant-pos
 
 An Electron application with React
 

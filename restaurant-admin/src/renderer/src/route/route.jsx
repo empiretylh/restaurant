@@ -117,6 +117,11 @@ const Routes = () => {
       path:'/register',
       element : <Register/>,
       errorElement: <Navigate to="/" />
+    },
+    {
+      path:'/login',
+      element : <Login/>,
+      errorElement: <Navigate to="/" />
     }
   ];
 

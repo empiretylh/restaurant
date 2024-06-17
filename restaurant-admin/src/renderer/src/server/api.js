@@ -189,6 +189,7 @@ export const deleteSendOrder = (data) => {
 export const getVoucherData = ({ queryKey }) => {
     const [_, time] = queryKey;
     getTokenLocalStorage();
+    if(time == undefined) return null;
     return axios.get('/api/orderscomplete/?time=' + time)
 }
 
