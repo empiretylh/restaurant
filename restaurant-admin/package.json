@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "POS Desktop Application",
   "main": "./out/main/index.js",
-  "author": "Perfect Solution",
+  "author": "Perfect Restaurant",
   "homepage": "https://perfectsolution.github.io/restaurant-pos",
   "scripts": {
     "format": "prettier --write .",

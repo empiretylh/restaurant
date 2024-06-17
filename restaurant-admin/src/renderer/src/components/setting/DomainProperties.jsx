@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContextProvider'
 import { useSetting } from '../../context/SettingContextProvider'
 import CustomVoucherEditor from './CustomVoucherEditor'
+const { ipcRenderer } = window.electron
 
 const DomainProperties = ({ show, setShow, data, customerid }) => {
   const { showNoti, showInfo } = useAlertShow()
@@ -84,7 +85,7 @@ const DomainProperties = ({ show, setShow, data, customerid }) => {
               className="bg-primary text-white p-2 rounded-md w-full"
               onClick={() => {
                 setShow(false)
-                window.location.reload()
+                ipcRenderer.invoke('restart-app')
 
               
               }}

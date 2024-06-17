@@ -1,6 +1,5 @@
 import axios from 'axios'
 import React, { useRef, useState } from 'react'
-
 const DomainProperties = ({ show, setShow, data, customerid }) => {
  
   const inputRef = useRef()
@@ -61,6 +60,7 @@ const DomainProperties = ({ show, setShow, data, customerid }) => {
               onClick={() => {
                 setShow(false)
                 window.location.reload()
+               
 
               
               }}
