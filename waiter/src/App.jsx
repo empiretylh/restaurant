@@ -27,14 +27,23 @@ const queryClient = new QueryClient();
 
 function App() {
 
-  const { token, setToken, loading, setLoading,setIsWaiter,isWaiter } = useContext(AuthContext);
+  const { token, setToken, loading, setLoading } = useContext(AuthContext);
 
   if (loading) {
     return <div className='w-full bg-gray-400 h-screen flex items-center justify-center flex-col gap-2 text-black font-mono'>
       <img src={IMAGE.waiter} alt='loading' style={{ width: 100, height: 100 }} />
       <h1 className='text-2xl'>Loading...</h1>
     </div>
+
+
   }
+
+  const [isWaiter, setIsWaiter] = useState(localStorage.getItem('isWaiter') == 'true' ? true : false)
+
+  console.log("IS Waiter",isWaiter)
+
+  
+
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -54,7 +63,7 @@ function App() {
 
                     </> :
                       <>
-                       <Route path='/' element={<Waiter />} /> 
+                       <Route path='/' element={isWaiter ? <Waiter /> : <Kitchen/>} /> 
                        <Route path='/kitchen/' element={<Kitchen />} />
 
                      

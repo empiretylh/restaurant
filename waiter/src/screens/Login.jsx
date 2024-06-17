@@ -4,11 +4,13 @@ import { useMutation } from 'react-query';
 import { login } from '../server/api';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthProvider';
+import DomainProperties from './DomainProperties';
 
 const Login = () => {
 
     const [loading, setLoading] = useState(true);
     const {token, setToken } = useContext(AuthContext)
+    const [showDomain, setShowDomain] = useState(false);
 
     const post_login = useMutation(login, {
         onMutate: (data) => {
@@ -21,6 +23,7 @@ const Login = () => {
             axios.defaults.headers.common['Authorization'] = `Token ${data.data.token}`;
             setToken(data.data.token)
             setLoading(false);
+            localStorage.setItem("isWaiter", true);
             window.location.href = '/'
         },
         onError: (error) => {
@@ -45,6 +48,17 @@ const Login = () => {
 
 
     return <div className='bg-gray-300 w-full h-screen flex items-center justify-center'>
+         <DomainProperties show={showDomain} setShow={setShowDomain} />
+         <div className="fixed top-0 right-0 m-5">
+        <button
+            onClick={() => {    
+                setShowDomain(true)
+            }}
+            className="bg-blue-500 text-white p-2 rounded-md"
+        >
+            <i className="bi bi-gear"></i>
+        </button>
+        </div>
         <div className='bg-white p-8 rounded-lg shadow-lg'>
             <form className='flex flex-col gap-2 items-center' onSubmit={onSubmit}>
                 <img src={IMAGE.waiter} style={{ width: 80, height: 80 }} />
@@ -54,7 +68,10 @@ const Login = () => {
                 <input type='text' placeholder='Username' className='p-2 border border-gray-300 rounded-lg' required/>
                 <input type='password' placeholder='Password' className='p-2 border border-gray-300 rounded-lg' required />
                 <button className='bg-blue-500 text-white rounded-lg p-2 hover:bg-blue-600 w-full'>Login</button>
-
+                <button  onClick={()=>{
+                    window.location.href = '/kitchen'
+                }} className='bg-yellow-500 text-white rounded-lg p-2 hover:bg-yellow-600 w-full'>Go To Kitchen</button>
+                
             </form>
         </div>
     </div>

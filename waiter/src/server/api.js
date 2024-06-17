@@ -132,6 +132,9 @@ export const getOrder = ({queryKey})=>{
 
     getTokenLocalStorage();
     const [_, table] =queryKey;
+    if(table == undefined){
+        return null;
+    }
     return axios.get('/api/orders/?table_id=' + table)
 }
 

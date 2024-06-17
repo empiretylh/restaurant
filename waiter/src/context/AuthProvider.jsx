@@ -6,7 +6,7 @@ const AuthProvider =({children})=>{
     const [token, setToken] = useState(localStorage.getItem('token'))
     const [loading, setLoading] = useState(false)
 
-    const [isWaiter, setIsWaiter] = useState(localStorage.getItem('isWaiter') || true)
+    const [isWaiter, setIsWaiter] = useState(localStorage.getItem('isWaiter') || false)
     
     useEffect(()=>{
         setLoading(true)

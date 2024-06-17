@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useContext } from "react";
 import { IMAGE } from "../assets/image";
 import { useMutation, useQuery } from "react-query";
 import {
@@ -22,6 +22,10 @@ import {
   sendToKitchen,
 } from "../websocket";
 import { useAlertShow } from "./component/AlertProvider";
+import { useProfile } from "../context/ProfileDataProvider";
+import { AuthContext } from "../context/AuthProvider";
+import CustomModal from "./component/CustomModal";
+
 
 const Waiter = () => {
   const [loading, setLoading] = useState(true);
@@ -45,11 +49,13 @@ const Waiter = () => {
 
   const { category_data, data: categorys } = useCategoryData();
   const { product_data, data: products } = useProductsData();
+  const { profile_data, data: profiles } = useProfile();
 
   const {showNoti} = useAlertShow();
 
   const [orderShow, setOrderShow] = useState(false);
   const [isMobileScreenSize, setIsMobileScreenSize] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     if (window.innerWidth < 500) {
@@ -202,6 +208,7 @@ const Waiter = () => {
       </div>
     );
   };
+
 
   const [orderid, setOrderid] = useState(0);
   const [isOrder, setIsOrder] = useState(false);
@@ -405,8 +412,40 @@ const Waiter = () => {
 
 //   when focus on searchbar floor is not show
 
+const ProfileModal = () => {
+
+  const { LogOut } = useContext(AuthContext)
+  return (
+      <CustomModal open={showProfile} setOpen={setShowProfile} title="Profile">
+          <h1>Username : {profiles?.username}</h1>
+          <h1>Phone Number : {profiles?.phoneno}</h1>
+
+          <div className="flex flex-row w-full gap-2">
+              <button onClick={() => {
+
+                  if (confirm("Are you sure to logout")) {
+                      LogOut();
+                  }
+
+              }} className="p-2 bg-red-500 text-white rounded flex flex-row gap-2 items-center ml-auto">
+                  <i class="bi bi-box-arrow-right"></i>
+                  <h1> Logout</h1>
+              </button>
+              <button onClick={() => setShowProfile(false)} className="p-2 bg-blue-500 text-white rounded flex flex-row gap-2 items-center">
+                  <h1> Cancel</h1>
+              </button>
+
+          </div>
+
+
+      </CustomModal>
+  )
+}
+
+
   return (
     <div className="bg-gray-300 w-full h-full flex flex-col">
+      <ProfileModal />
       <div className="bg-white p-1 px-2 flex flex-row items-center gap-3 shadow-lg">
         <img src={IMAGE.waiter} style={{ width: 45, height: 45 }} />
         <h1 className="text-md font-semibold">Waiter</h1>
@@ -442,7 +481,15 @@ const Waiter = () => {
           />
         </div>
 
-        <div className="ml-auto">
+        <div className="ml-auto flex flex-row items-center gap-2">
+        <button
+              className="border  p-2 rounded-lg"
+              onClick={() => {
+                setShowProfile(true);
+              }}
+            >
+              <icon className="bi bi-person text-lg"></icon>
+            </button>
           {isMobileScreenSize && (
             <button
               className="bg-green-500 text-white p-2 rounded-lg"
@@ -453,6 +500,7 @@ const Waiter = () => {
               <icon className="bi bi-cart text-lg"></icon>
             </button>
           )}
+         
         </div>
       </div>
       <div

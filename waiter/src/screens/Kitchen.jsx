@@ -502,7 +502,7 @@ const Kitchen = () => {
             }}
         >
             <div className="bg-white  grid grid-cols-3 items-center justify-between gap-3 shadow-lg">
-                <div className="flex flex-row items-center p-1 px-2 gap-2">
+                <div className="flex flex-row items-center p-1 px-2 gap-2  ">
                     <img
                         src={IMAGE.kitchen}
                         style={{ width: 45, height: 45 }}
