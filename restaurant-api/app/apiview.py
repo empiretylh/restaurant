@@ -126,7 +126,7 @@ class CreateUserApiView(CreateAPIView):
 
         # device_unique = request.data.get("unique_id", None)
         # device_name = request.data.get("device_name", None)
-        acc_type = request.data.get("acc_type", "Admin")
+        # acc_type = request.data.get("acc_type", "Admin")
 
         serializers = self.get_serializer(data=request.data)
         serializers.is_valid(raise_exception=True)
